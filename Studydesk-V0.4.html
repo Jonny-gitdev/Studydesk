@@ -294,7 +294,7 @@ function updateDash() {
   document.getElementById('dash-notes').innerText = data.notes.length;
   document.getElementById('dash-research').innerText = data.notes.flatMap(n => n.tags || []).length;
 
-  // FIX 4: Show up to 15 pending lectures, sorted oldest-first by date
+  
   const pendingLec = visibleLec
     .filter(l => !l.done)
     .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
@@ -367,7 +367,7 @@ function saveLec() {
       l.link = document.getElementById('lec-m-link').value.trim();
       l.note = document.getElementById('lec-m-note').value.trim();
       l.prio = document.getElementById('lec-m-prio').checked;
-      // FIX 2: wenn als ausgefallen markiert wird, Nummerierung der Nachfolger anpassen
+      
       l.cancelled = cancelled;
       renumberSubjectLectures(subject);
       if (oldSubject !== subject && oldSubject) renumberSubjectLectures(oldSubject);
@@ -403,7 +403,7 @@ function deleteLec(id) {
 function setLecFilter(btn,val) { lecFilter=val; document.querySelectorAll('.filter-btn[data-lf]').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderLectures(); }
 
 // ── Detail Modal ─────────────────────────────────────────────────
-// FIX 1: Edit-Button works from both dashboard and lecture list detail views
+
 function showLectureDetail(id) {
   const lec = data.lectures.find(l=>l.id===id);
   if(!lec) return;
@@ -464,7 +464,7 @@ function toggleTodoDoneFromDetail(id) {
 
 function closeDetailModal() { document.getElementById('detail-modal').classList.add('hidden'); currentDetailId = null; currentDetailType = null; }
 
-// FIX 1: editFromDetail now works from dashboard too – closes detail, opens lec modal
+
 function editFromDetail() {
   const id = currentDetailId;
   closeDetailModal();
@@ -511,7 +511,7 @@ function generatePastLecturesFromSchedule() {
         const m = String(current.getMonth()+1).padStart(2,'0');
         const d = String(current.getDate()).padStart(2,'0');
         const dateStr = `${y}-${m}-${d}`;
-        // FIX 2: also skip if a cancelled lecture already exists for this date + subject
+        
         const alreadyExists = data.lectures.some(l => l.subject === entry.subject && l.date === dateStr);
         if (!alreadyExists) {
           data.lectures.push({ id: Date.now().toString() + Math.random(), title: '', subject: entry.subject, date: dateStr, link: '', note: `Generiert aus Stundenplan (${entry.day}, Zeitraum: ${entry.startDate} bis ${entry.endDate})`, prio: false, done: false, cancelled: false });
