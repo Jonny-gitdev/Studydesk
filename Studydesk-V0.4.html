@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>StudyDesk</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Crimson Pro', 'Georgia', serif; background: #0e0f11; color: #e8e4dc; min-height: 100vh; display: flex; flex-direction: column; }
+  :root {
+    --bg: #0e0f11; --bg2: #16181c; --bg3: #1e2126; --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
+    --accent: #c4a35a; --accent2: #7fb3a8; --text: #e8e4dc; --text2: #9a9490; --text3: #5c5a56;
+    --danger: #c46a5a; --success: #7fa86a; --cancelled: #8a6e4e;
+  }
+  header { padding: 20px 32px 16px; border-bottom: 0.5px solid var(--border2); display: flex; align-items: baseline; gap: 16px; background: var(--bg2); flex-wrap: wrap; justify-content: space-between; }
+  .header-left { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  header h1 { font-size: 22px; font-weight: 400; letter-spacing: 0.04em; color: var(--accent); }
+  header span { font-size: 13px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+  .nav { display: flex; gap: 4px; padding: 12px 32px; background: var(--bg2); border-bottom: 0.5px solid var(--border); flex-wrap: wrap; }
+  .nav-btn { padding: 6px 16px; border-radius: 20px; border: 0.5px solid transparent; background: transparent; color: var(--text2); font-size: 13px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .nav-btn:hover { color: var(--text); background: var(--bg3); }
+  .nav-btn.active { background: var(--bg3); border-color: var(--border2); color: var(--accent); }
+  .main { flex: 1; padding: 28px 32px; overflow: auto; }
+  .section { display: none; }
+  .section.active { display: block; }
+  .dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+  .stat-card .label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; }
+  .stat-card .val { font-size: 32px; font-weight: 300; color: var(--text); }
+  .stat-card .sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  .progress-bar-outer { background: var(--bg3); border-radius: 4px; height: 4px; margin-top: 10px; }
+  .progress-bar-inner { height: 4px; border-radius: 4px; background: var(--accent); transition: width 0.4s; }
+  .todo-quick { background: var(--bg2); border: 0.5px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 24px; }
+  .todo-quick h3 { font-size: 13px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; font-family: 'JetBrains Mono', monospace; }
+  .todo-quick-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--border); font-size: 14px; cursor: pointer; }
+  .todo-quick-item:hover { background: rgba(255,255,255,0.03); border-radius: 6px; padding-left: 6px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .dot.prio { background: var(--danger); }
+  .lec-date-badge { font-size: 11px; color: var(--text2); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+  .toolbar { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+  .toolbar input, .toolbar select { background: var(--bg2); border: 0.5px solid var(--border2); border-radius: 8px; padding: 8px 14px; color: var(--text); font-size: 13px; font-family: inherit; outline: none; }
+  .btn { background: var(--bg3); border: 0.5px solid var(--border2); border-radius: 8px; padding: 8px 16px; color: var(--text); font-size: 13px; cursor: pointer; font-family: inherit; transition: all 0.15s; white-space: nowrap; }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); color: #0e0f11; border-color: var(--accent); font-weight: 500; }
+  .btn.primary:hover { opacity: 0.85; }
+  .btn.small { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+  .btn.danger { border-color: var(--danger); color: var(--danger); }
+  .lecture-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: 10px; padding: 18px 22px; margin-bottom: 10px; transition: border-color 0.15s; }
+  .lecture-card:hover { border-color: var(--border2); }
+  .lecture-card.done { opacity: 0.55; }
+  .lecture-card.cancelled { opacity: 0.4; background: var(--bg3); border-color: var(--cancelled); }
+  .lec-check { width: 20px; height: 20px; border: 1.5px solid var(--border2); border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; margin-right: 16px; flex-shrink: 0; }
+  .lec-check.checked { background: var(--accent); border-color: var(--accent); }
+  .lec-check.checked::after { content: '✓'; font-size: 11px; color: #0e0f11; font-weight: 600; }
+  .lec-body { flex: 1; display: inline-block; vertical-align: top; width: calc(100% - 140px); }
+  .lec-title { font-size: 15px; color: var(--text); margin-bottom: 3px; font-weight: 400; cursor: pointer; display: inline-block; }
+  .lec-title:hover { text-decoration: underline; color: var(--accent2); }
+  .lec-meta { font-size: 12px; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
+  .lec-tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .tag { padding: 2px 8px; border-radius: 12px; background: var(--bg3); border: 0.5px solid var(--border2); font-size: 11px; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
+  .tag.prio { border-color: rgba(196,106,90,0.4); color: var(--danger); background: rgba(196,106,90,0.08); }
+  .tag.cancelled { border-color: rgba(138,110,78,0.4); color: var(--cancelled); background: rgba(138,110,78,0.1); }
+  .tag.done-tag { border-color: rgba(127,168,106,0.4); color: var(--success); background: rgba(127,168,106,0.08); }
+  .lec-actions { display: inline-flex; gap: 6px; float: right; }
+  .filter-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .filter-btn { padding: 4px 12px; border-radius: 14px; border: 0.5px solid var(--border); background: transparent; color: var(--text2); font-size: 12px; cursor: pointer; font-family: 'JetBrains Mono', monospace; }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(196,163,90,0.07); }
+  .schedule-grid { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 20px; }
+  .schedule-day { min-width: 180px; background: var(--bg3); border: 0.5px solid var(--border); border-radius: 12px; padding: 12px; }
+  .schedule-day h4 { font-size: 14px; color: var(--accent); margin-bottom: 12px; border-bottom: 0.5px solid var(--border); padding-bottom: 6px; }
+  .schedule-item { background: var(--bg2); margin-bottom: 8px; padding: 8px 10px; border-radius: 8px; font-size: 12px; border-left: 3px solid var(--accent); cursor: pointer; }
+  .schedule-item:hover { background: var(--bg); }
+  .schedule-period { font-size: 10px; color: var(--text3); margin-top: 4px; }
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 100; }
+  .modal-bg.hidden { display: none; }
+  .modal { background: var(--bg2); border: 0.5px solid var(--border2); border-radius: 16px; padding: 28px 32px; width: 560px; max-width: 95vw; max-height: 85vh; overflow-y: auto; }
+  .modal h2 { font-size: 18px; font-weight: 400; margin-bottom: 20px; color: var(--accent); }
+  .modal label { display: block; font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; margin-top: 12px; font-family: 'JetBrains Mono', monospace; }
+  .modal input, .modal select, .modal textarea { width: 100%; background: var(--bg3); border: 0.5px solid var(--border2); border-radius: 8px; padding: 8px 12px; color: var(--text); font-size: 14px; font-family: 'Crimson Pro', serif; }
+  input[type="date"] { color-scheme: dark; font-family: 'JetBrains Mono', monospace; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text3); }
+  .date-range { display: flex; gap: 10px; align-items: center; }
+  .date-range input { flex: 1; }
+  .notes-layout { display: grid; grid-template-columns: 260px 1fr; gap: 16px; min-height: 500px; }
+  .notes-sidebar { background: var(--bg2); border: 0.5px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .notes-sidebar-header { padding: 14px 16px; border-bottom: 0.5px solid var(--border); font-size: 11px; text-transform: uppercase; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+  .note-item { padding: 12px 16px; border-bottom: 0.5px solid var(--border); cursor: pointer; }
+  .note-item:hover { background: var(--bg3); }
+  .note-item.active { background: var(--bg3); border-left: 2px solid var(--accent); }
+  .note-item-title { font-size: 13px; color: var(--text); margin-bottom: 3px; }
+  .note-editor { background: var(--bg2); border: 0.5px solid var(--border); border-radius: 10px; }
+  .note-title-input { background: transparent; border: none; color: var(--text); font-size: 18px; font-family: 'Crimson Pro', serif; padding: 20px 24px 8px; outline: none; width: 100%; }
+  .note-textarea { background: transparent; border: none; color: var(--text); font-size: 15px; font-family: 'Crimson Pro', serif; padding: 16px 24px; outline: none; line-height: 1.8; resize: vertical; min-height: 300px; width: 100%; }
+  .research-tags { padding: 8px 24px 16px; display: flex; gap: 6px; flex-wrap: wrap; border-top: 0.5px solid var(--border); }
+  .research-tag { display: flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 14px; background: rgba(127,179,168,0.1); border: 0.5px solid rgba(127,179,168,0.3); font-size: 11px; color: var(--accent2); }
+  #toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg3); border: 0.5px solid var(--border2); border-radius: 8px; padding: 10px 18px; z-index: 200; transition: all 0.25s; opacity: 0; transform: translateY(20px); }
+  #toast.show { opacity: 1; transform: translateY(0); }
+  .done-checkbox { margin-right: 8px; cursor: pointer; width: 18px; height: 18px; }
+  .detail-row { margin-bottom: 12px; }
+  .detail-label { color: var(--text3); font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; margin-bottom: 4px; }
+  .import-drop { border: 1.5px dashed var(--border2); border-radius: 10px; padding: 24px; text-align: center; color: var(--text3); cursor: pointer; margin-top: 16px; transition: border-color 0.15s; }
+  .import-drop:hover { border-color: var(--accent); color: var(--accent2); }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-left">
+    <h1>StudyDesk</h1>
+    <span id="date-display"></span>
+  </div>
+  <div class="header-actions">
+    <button class="btn small" onclick="exportData()" title="Daten exportieren">⬇ Export</button>
+    <button class="btn small" onclick="openImportModal()" title="Daten importieren">⬆ Import</button>
+  </div>
+</header>
+<nav class="nav">
+  <button class="nav-btn active" data-section="dashboard">Übersicht</button>
+  <button class="nav-btn" data-section="lectures">Vorlesungen</button>
+  <button class="nav-btn" data-section="schedule">Stundenplan</button>
+  <button class="nav-btn" data-section="notes">Notizen</button>
+  <button class="nav-btn" data-section="todos">Aufgaben</button>
+</nav>
+<div class="main">
+  <div class="section active" id="sec-dashboard">
+    <div class="dash-grid">
+      <div class="stat-card"><div class="label">Vorlesungen</div><div class="val" id="dash-total">0</div><div class="sub" id="dash-done-text">0 nachgeholt</div><div class="progress-bar-outer"><div class="progress-bar-inner" id="dash-prog"></div></div></div>
+      <div class="stat-card"><div class="label">Offene Aufgaben</div><div class="val" id="dash-tasks">0</div><div class="sub" id="dash-done-tasks">0 erledigt</div></div>
+      <div class="stat-card"><div class="label">Notizen</div><div class="val" id="dash-notes">0</div><div class="sub" id="dash-research">0 Recherche-Tags</div></div>
+    </div>
+    <div class="todo-quick"><h3>📖 Offene Vorlesungen (zum Nachholen)</h3><div id="dash-next-list"></div></div>
+    <div class="todo-quick"><h3>✅ Offene Aufgaben</h3><div id="dash-todos-list"></div></div>
+  </div>
+  <div class="section" id="sec-lectures">
+    <div class="toolbar">
+      <input type="text" id="lec-search" placeholder="Vorlesung suchen…" oninput="renderLectures()">
+      <select id="lec-filter-subject" onchange="renderLectures()"><option value="">Alle Rechtsgebiete</option></select>
+      <button class="btn primary" onclick="openLecModal()">+ Vorlesung</button>
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn active" data-lf="all" onclick="setLecFilter(this,'all')">Alle</button>
+      <button class="filter-btn" data-lf="todo" onclick="setLecFilter(this,'todo')">Offen</button>
+      <button class="filter-btn" data-lf="done" onclick="setLecFilter(this,'done')">Erledigt</button>
+      <button class="filter-btn" data-lf="prio" onclick="setLecFilter(this,'prio')">Priorität</button>
+      <button class="filter-btn" data-lf="cancelled" onclick="setLecFilter(this,'cancelled')">Ausgefallen</button>
+    </div>
+    <div id="lecture-list"></div>
+  </div>
+  <div class="section" id="sec-schedule">
+    <div class="toolbar"><button class="btn primary" onclick="openScheduleModal()">➕ Termin zum Stundenplan hinzufügen</button><span style="font-size:12px; color:var(--text3);">Klicke auf Eintrag zum Löschen</span></div>
+    <div id="schedule-container" class="schedule-grid"></div>
+    <div style="margin-top:24px;"><button class="btn" onclick="generatePastLecturesFromSchedule()">📅 Verpasste Vorlesungen generieren (innerhalb Zeiträume)</button><span style="margin-left:12px; font-size:12px; color:var(--text2);">Erstellt fehlende Vorlesungen basierend auf den Zeiträumen</span></div>
+  </div>
+  <div class="section" id="sec-notes"><div style="display:flex; gap:10px; margin-bottom:16px;"><button class="btn primary" onclick="newNote()">+ Neue Notiz</button><input type="text" id="note-search" placeholder="Notizen durchsuchen…" oninput="filterNotes(this.value)" style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:8px;padding:8px 14px;color:var(--text);flex:1;"></div><div class="notes-layout"><div class="notes-sidebar"><div class="notes-sidebar-header">Notizen</div><div id="notes-list" style="overflow-y:auto; flex:1;"></div></div><div class="note-editor" id="note-editor"><div class="note-editor-toolbar" style="padding:12px 20px; border-bottom:0.5px solid var(--border);"><span style="font-size:12px;color:var(--text3);">Notiz auswählen oder neu erstellen</span></div><div id="note-content-area" style="display:none; flex-direction:column;"><input class="note-title-input" id="note-title" placeholder="Titel der Notiz…" oninput="saveNoteDebounced()"><textarea class="note-textarea" id="note-body" placeholder="Notizen, Fragen, Gedanken…&#10;&#10;Nutze #Tag um Recherche-Themen zu markieren…" oninput="saveNoteDebounced(); extractTagsFromBody();"></textarea><div class="research-tags" id="research-tags-area"><span style="font-size:11px;color:var(--text3);">recherche:</span><div id="research-tags-list" style="display:flex; gap:6px; flex-wrap:wrap;"></div></div><div style="padding:10px 24px; border-top:0.5px solid var(--border); display:flex; gap:8px; justify-content:flex-end;"><button class="btn small danger" onclick="deleteCurrentNote()">Löschen</button><span style="font-size:11px;color:var(--text3);" id="note-saved-hint"></span></div></div></div></div></div>
+  <div class="section" id="sec-todos"><div class="toolbar"><input type="text" id="todo-input" placeholder="Neue Aufgabe…" onkeydown="if(event.key==='Enter')addTodo()"><select id="todo-subject"></select><select id="todo-prio"><option value="normal">Normal</option><option value="high">Hoch</option></select><button class="btn primary" onclick="addTodo()">+ Aufgabe</button></div><div class="filter-row"><button class="filter-btn active" data-tf="all" onclick="setTodoFilter(this,'all')">Alle</button><button class="filter-btn" data-tf="open" onclick="setTodoFilter(this,'open')">Offen</button><button class="filter-btn" data-tf="done" onclick="setTodoFilter(this,'done')">Erledigt</button></div><div id="todo-list"></div></div>
+</div>
+
+<!-- Lecture Modal -->
+<div class="modal-bg hidden" id="lec-modal"><div class="modal"><h2 id="lec-modal-title">Vorlesung hinzufügen/bearbeiten</h2><label>Rechtsgebiet / Fach</label><input type="text" id="lec-m-subject" list="subject-datalist" autocomplete="off"><datalist id="subject-datalist"></datalist><label>Datum</label><input type="date" id="lec-m-date"><label>Link</label><input type="text" id="lec-m-link"><label>Notiz</label><textarea id="lec-m-note" rows="2"></textarea><label style="display:flex;align-items:center;gap:8px;margin-top:12px;"><input type="checkbox" id="lec-m-prio"> Priorität</label><label style="display:flex;align-items:center;gap:8px;margin-top:8px;"><input type="checkbox" id="lec-m-cancelled"> Als ausgefallen markieren</label><div class="modal-actions"><button class="btn" onclick="closeLecModal()">Abbrechen</button><button class="btn primary" onclick="saveLec()">Speichern</button></div></div></div>
+
+<!-- Detail Modal -->
+<div class="modal-bg hidden" id="detail-modal"><div class="modal"><h2 id="detail-title">📘 Vorlesungsdetails</h2><div id="detail-content"></div><div class="modal-actions" id="detail-modal-actions"><button class="btn" onclick="closeDetailModal()">Schließen</button></div></div></div>
+
+<!-- Schedule Modal -->
+<div class="modal-bg hidden" id="schedule-modal"><div class="modal"><h2>Stundenplan – Regelmäßiger Termin</h2><label>Rechtsgebiet</label><input type="text" id="sched-subject" placeholder="z.B. BGB AT"><label>Wochentag</label><select id="sched-day"><option value="Montag">Montag</option><option value="Dienstag">Dienstag</option><option value="Mittwoch">Mittwoch</option><option value="Donnerstag">Donnerstag</option><option value="Freitag">Freitag</option><option value="Samstag">Samstag</option><option value="Sonntag">Sonntag</option></select><label>Zeitraum (Start - Ende)</label><div class="date-range"><input type="date" id="sched-start"><span style="color:var(--text3);">bis</span><input type="date" id="sched-end"></div><label>Uhrzeit (optional)</label><input type="text" id="sched-time" placeholder="10:00 - 12:00"><div class="modal-actions"><button class="btn" onclick="closeScheduleModal()">Abbrechen</button><button class="btn primary" onclick="saveScheduleEntry()">Speichern</button></div></div></div>
+
+<!-- Import Modal -->
+<div class="modal-bg hidden" id="import-modal">
+  <div class="modal">
+    <h2>⬆ Daten importieren</h2>
+    <p style="color:var(--text2); font-size:14px; margin-bottom:8px;">Achtung: Der Import überschreibt alle aktuellen Daten. Exportiere zuerst eine Sicherung, falls nötig.</p>
+    <div class="import-drop" id="import-drop" onclick="document.getElementById('import-file-input').click()">
+      <div style="font-size:28px; margin-bottom:8px;">📂</div>
+      <div style="font-size:14px;">JSON-Datei hier ablegen oder klicken zum Auswählen</div>
+    </div>
+    <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="handleImportFile(this)">
+    <div class="modal-actions"><button class="btn" onclick="closeImportModal()">Abbrechen</button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script>
+let data = JSON.parse(localStorage.getItem('studydesk_pro') || '{"lectures":[],"schedule":[],"todos":[],"notes":[]}');
+if (!data.schedule) data.schedule = [];
+if (!data.notes) data.notes = [];
+if (!data.todos) data.todos = [];
+if (!data.lectures) data.lectures = [];
+
+let currentNote = null, lecEditId = null, lecFilter = 'all', todoFilter = 'all', noteFilter = '', saveTimer = null;
+let currentDetailId = null, currentDetailType = null;
+
+function saveToLocal() { localStorage.setItem('studydesk_pro', JSON.stringify(data)); updateDash(); }
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>'"]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":"&#39;", '"':'&quot;' }[m])); }
+
+// ── Export / Import ──────────────────────────────────────────────
+function exportData() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const now = new Date();
+  const stamp = now.toISOString().slice(0,10);
+  a.href = url; a.download = `studydesk_${stamp}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('Export erfolgreich ✓');
+}
+function openImportModal() { document.getElementById('import-modal').classList.remove('hidden'); }
+function closeImportModal() { document.getElementById('import-modal').classList.add('hidden'); document.getElementById('import-file-input').value = ''; }
+function handleImportFile(input) {
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if(typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Ungültiges Format');
+      if(!confirm('Alle aktuellen Daten werden überschrieben. Fortfahren?')) return;
+      data = { lectures: parsed.lectures || [], schedule: parsed.schedule || [], todos: parsed.todos || [], notes: parsed.notes || [] };
+      saveToLocal(); renderLectures(); renderSchedule(); renderTodos(); renderNotesList(); updateDash();
+      closeImportModal(); toast('Import erfolgreich ✓');
+    } catch(err) { toast('Fehler: Ungültige JSON-Datei'); }
+  };
+  reader.readAsText(file);
+}
+// Drag & drop import
+document.addEventListener('DOMContentLoaded', () => {
+  const drop = document.getElementById('import-drop');
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.style.borderColor = 'var(--accent)'; });
+  drop.addEventListener('dragleave', () => { drop.style.borderColor = ''; });
+  drop.addEventListener('drop', e => {
+    e.preventDefault(); drop.style.borderColor = '';
+    const file = e.dataTransfer.files[0]; if(!file) return;
+    const fakeInput = { files: [file] }; handleImportFile(fakeInput);
+  });
+});
+
+// ── Nummerierung ─────────────────────────────────────────────────
+// Renumbering: only non-cancelled lectures count, sorted by date
+function renumberSubjectLectures(subject) {
+  const relevant = data.lectures
+    .filter(l => l.subject === subject && !l.cancelled)
+    .sort((a,b) => (a.date || '').localeCompare(b.date || ''));
+  relevant.forEach((lec, idx) => {
+    const newNum = idx + 1;
+    const datePart = lec.date ? ` (${lec.date})` : '';
+    lec.title = `${lec.subject} - ${newNum}${datePart}`;
+  });
+  // Update title for cancelled ones too (keep their label consistent)
+  data.lectures
+    .filter(l => l.subject === subject && l.cancelled)
+    .forEach(lec => {
+      const datePart = lec.date ? ` (${lec.date})` : '';
+      lec.title = `${lec.subject} - ausgefallen${datePart}`;
+    });
+}
+
+function updateSubjectDatalist() {
+  const subjects = [...new Set(data.lectures.map(l => l.subject).filter(Boolean))];
+  const datalist = document.getElementById('subject-datalist');
+  if (datalist) datalist.innerHTML = subjects.map(s => `<option value="${escapeHtml(s)}">`).join('');
+}
+
+// ── Navigation ───────────────────────────────────────────────────
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const section = this.getAttribute('data-section');
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('sec-' + section).classList.add('active');
+    this.classList.add('active');
+    if(section === 'lectures') renderLectures();
+    if(section === 'schedule') renderSchedule();
+    if(section === 'notes') renderNotesList();
+    if(section === 'todos') { renderTodos(); populateTodoSubject(); }
+    if(section === 'dashboard') updateDash();
+  });
+});
+function updateDate() { document.getElementById('date-display').textContent = new Date().toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long', year:'numeric'}); }
+updateDate();
+
+// ── Dashboard ────────────────────────────────────────────────────
+function updateDash() {
+  const visibleLec = data.lectures.filter(l => !l.cancelled);
+  const done = visibleLec.filter(l => l.done).length;
+  document.getElementById('dash-total').innerText = visibleLec.length;
+  document.getElementById('dash-done-text').innerHTML = done + ' nachgeholt';
+  const pct = visibleLec.length ? (done/visibleLec.length)*100 : 0;
+  document.getElementById('dash-prog').style.width = pct+'%';
+  const openTodos = data.todos.filter(t => !t.done).length;
+  const doneTodos = data.todos.filter(t => t.done).length;
+  document.getElementById('dash-tasks').innerText = openTodos;
+  document.getElementById('dash-done-tasks').innerHTML = doneTodos + ' erledigt';
+  document.getElementById('dash-notes').innerText = data.notes.length;
+  document.getElementById('dash-research').innerText = data.notes.flatMap(n => n.tags || []).length;
+
+  // FIX 4: Show up to 15 pending lectures, sorted oldest-first by date
+  const pendingLec = visibleLec
+    .filter(l => !l.done)
+    .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+    .slice(0, 15);
+  document.getElementById('dash-next-list').innerHTML = pendingLec.length
+    ? pendingLec.map(l => `<div class="todo-quick-item" onclick="showLectureDetail('${l.id}')"><div class="dot ${l.prio ? 'prio' : ''}"></div><span style="flex:1;">${escapeHtml(l.title)}</span><span class="lec-date-badge">${l.date || 'kein Datum'}</span></div>`).join('')
+    : '<div style="color:var(--text3); padding:8px 0;">✅ Alle Vorlesungen nachgeholt</div>';
+
+  const allOpenTodos = data.todos.filter(t => !t.done).slice(0,6);
+  document.getElementById('dash-todos-list').innerHTML = allOpenTodos.length
+    ? allOpenTodos.map(t => `<div class="todo-quick-item" onclick="showTodoDetail('${t.id}')"><div class="dot ${t.prio === 'high' ? 'prio' : ''}"></div><span style="flex:1;">${escapeHtml(t.text)}</span><span class="lec-date-badge">${t.subject || 'kein Fach'}</span></div>`).join('')
+    : '<div style="color:var(--text3); padding:8px 0;">✅ Keine offenen Aufgaben</div>';
+}
+
+// ── Lectures ─────────────────────────────────────────────────────
+function renderLectures() {
+  let list = data.lectures.filter(l => !l.cancelled);
+  const search = document.getElementById('lec-search')?.value.toLowerCase() || '';
+  const subjectF = document.getElementById('lec-filter-subject')?.value || '';
+  if(search) list = list.filter(l => l.title.toLowerCase().includes(search) || (l.subject||'').toLowerCase().includes(search));
+  if(subjectF) list = list.filter(l => l.subject === subjectF);
+  if(lecFilter === 'todo') list = list.filter(l => !l.done);
+  if(lecFilter === 'done') list = list.filter(l => l.done);
+  if(lecFilter === 'prio') list = list.filter(l => l.prio);
+  if(lecFilter === 'cancelled') { list = data.lectures.filter(l => l.cancelled); }
+  const container = document.getElementById('lecture-list');
+  if(!list.length) { container.innerHTML = '<div class="empty-state">📭 Keine Vorlesungen</div>'; return; }
+  container.innerHTML = list.map(l => `<div class="lecture-card ${l.done ? 'done' : ''} ${l.cancelled ? 'cancelled' : ''}"><div style="display:flex; align-items:flex-start;"><div class="lec-check ${l.done ? 'checked' : ''}" onclick="event.stopPropagation(); toggleLec('${l.id}')"></div><div class="lec-body"><div class="lec-title" onclick="showLectureDetail('${l.id}')">${escapeHtml(l.title)}</div><div class="lec-meta">${escapeHtml(l.subject || '')} ${l.date ? '· ' + l.date : ''}</div><div class="lec-tags">${!l.done && !l.cancelled ? '<span class="tag">nachholen</span>' : ''}${l.prio ? '<span class="tag prio">priorität</span>' : ''}${l.cancelled ? '<span class="tag cancelled">ausgefallen</span>' : ''}${l.done && !l.cancelled ? '<span class="tag done-tag">erledigt</span>' : ''}</div></div><div class="lec-actions"><button class="btn small" onclick="event.stopPropagation(); openLecModal('${l.id}')">✎</button><button class="btn small danger" onclick="event.stopPropagation(); deleteLec('${l.id}')">✕</button></div></div></div>`).join('');
+  const subjects = [...new Set(data.lectures.map(l=>l.subject).filter(Boolean))];
+  const sel = document.getElementById('lec-filter-subject'); if(sel) sel.innerHTML = '<option value="">Alle Rechtsgebiete</option>' + subjects.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+  updateSubjectDatalist();
+}
+
+function openLecModal(id) {
+  lecEditId = id || null;
+  const modal = document.getElementById('lec-modal');
+  modal.classList.remove('hidden');
+  if(id) {
+    const l = data.lectures.find(x=>x.id===id);
+    document.getElementById('lec-modal-title').innerText = 'Vorlesung bearbeiten';
+    document.getElementById('lec-m-subject').value = l.subject || '';
+    document.getElementById('lec-m-date').value = l.date || '';
+    document.getElementById('lec-m-link').value = l.link||'';
+    document.getElementById('lec-m-note').value = l.note||'';
+    document.getElementById('lec-m-prio').checked = !!l.prio;
+    document.getElementById('lec-m-cancelled').checked = !!l.cancelled;
+  } else {
+    document.getElementById('lec-modal-title').innerText = 'Neue Vorlesung';
+    document.getElementById('lec-m-subject').value = '';
+    document.getElementById('lec-m-date').value = '';
+    document.getElementById('lec-m-link').value = '';
+    document.getElementById('lec-m-note').value = '';
+    document.getElementById('lec-m-prio').checked = false;
+    document.getElementById('lec-m-cancelled').checked = false;
+  }
+  updateSubjectDatalist();
+}
+function closeLecModal() { document.getElementById('lec-modal').classList.add('hidden'); lecEditId=null; }
+
+function saveLec() {
+  const subject = document.getElementById('lec-m-subject').value.trim();
+  if(!subject) { toast('Bitte ein Rechtsgebiet/Fach eingeben.'); return; }
+  const dateRaw = document.getElementById('lec-m-date').value;
+  const cancelled = document.getElementById('lec-m-cancelled').checked;
+  if(lecEditId) {
+    const l = data.lectures.find(x=>x.id===lecEditId);
+    if(l) {
+      const oldSubject = l.subject;
+      l.subject = subject; l.date = dateRaw;
+      l.link = document.getElementById('lec-m-link').value.trim();
+      l.note = document.getElementById('lec-m-note').value.trim();
+      l.prio = document.getElementById('lec-m-prio').checked;
+      // FIX 2: wenn als ausgefallen markiert wird, Nummerierung der Nachfolger anpassen
+      l.cancelled = cancelled;
+      renumberSubjectLectures(subject);
+      if (oldSubject !== subject && oldSubject) renumberSubjectLectures(oldSubject);
+      toast('Gespeichert');
+    }
+  } else {
+    if (cancelled) {
+      const datePart = dateRaw ? ` (${dateRaw})` : '';
+      data.lectures.push({ id: Date.now().toString(), title: `${subject} - ausgefallen${datePart}`, subject, date: dateRaw, link: document.getElementById('lec-m-link').value.trim(), note: document.getElementById('lec-m-note').value.trim(), prio: document.getElementById('lec-m-prio').checked, done: false, cancelled: true });
+    } else {
+      data.lectures.push({ id: Date.now().toString(), title: '', subject, date: dateRaw, link: document.getElementById('lec-m-link').value.trim(), note: document.getElementById('lec-m-note').value.trim(), prio: document.getElementById('lec-m-prio').checked, done: false, cancelled: false });
+      renumberSubjectLectures(subject);
+    }
+    toast('Vorlesung hinzugefügt');
+  }
+  saveToLocal(); closeLecModal(); renderLectures();
+}
+
+function toggleLec(id) {
+  const l = data.lectures.find(x=>x.id===id);
+  if(l && !l.cancelled) { l.done = !l.done; saveToLocal(); renderLectures(); updateDash(); toast(l.done ? 'Nachgeholt ✓' : 'Wieder offen'); }
+  else if(l?.cancelled) { toast('Ausgefallene Vorlesungen können nicht nachgeholt werden'); }
+}
+function deleteLec(id) {
+  if(confirm('Vorlesung löschen? (Wirkt sich auf Nummerierung aus)')) {
+    const lec = data.lectures.find(x=>x.id===id);
+    const subject = lec?.subject;
+    data.lectures = data.lectures.filter(x=>x.id!==id);
+    if(subject) renumberSubjectLectures(subject);
+    saveToLocal(); renderLectures(); toast('Gelöscht');
+  }
+}
+function setLecFilter(btn,val) { lecFilter=val; document.querySelectorAll('.filter-btn[data-lf]').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderLectures(); }
+
+// ── Detail Modal ─────────────────────────────────────────────────
+// FIX 1: Edit-Button works from both dashboard and lecture list detail views
+function showLectureDetail(id) {
+  const lec = data.lectures.find(l=>l.id===id);
+  if(!lec) return;
+  currentDetailId = id;
+  currentDetailType = 'lecture';
+  document.getElementById('detail-title').innerText = '📘 Vorlesungsdetails';
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-row"><div class="detail-label">Titel</div><div style="font-size:16px; color:var(--accent);">${escapeHtml(lec.title)}</div></div>
+    <div class="detail-row"><div class="detail-label">Rechtsgebiet</div><div>${escapeHtml(lec.subject) || '—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Datum</div><div>${lec.date || 'Kein Datum'}</div></div>
+    <div class="detail-row"><div class="detail-label">Priorität</div><div>${lec.prio ? '⭐ Hoch' : 'Normal'}</div></div>
+    <div class="detail-row"><div class="detail-label">Status</div><div>${lec.cancelled ? '🚫 Ausgefallen' : (lec.done ? '✅ Erledigt / Nachgeholt' : '⏳ Offen / Nicht nachgeholt')}</div></div>
+    <div class="detail-row"><div class="detail-label">Erledigt?</div><label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="detail-done-checkbox" ${lec.done && !lec.cancelled ? 'checked' : ''} ${lec.cancelled ? 'disabled' : ''} onchange="toggleDoneFromDetail('${lec.id}')"> ${lec.cancelled ? '(Ausgefallen)' : 'Als nachgeholt markieren'}</label></div>
+    ${lec.link ? `<div class="detail-row"><div class="detail-label">Link</div><div><a href="${lec.link}" target="_blank" style="color:var(--accent2);">Öffnen</a></div></div>` : ''}
+    ${lec.note ? `<div class="detail-row"><div class="detail-label">Notiz</div><div style="background:var(--bg3); padding:10px; border-radius:8px;">${escapeHtml(lec.note)}</div></div>` : ''}
+  `;
+  // Show edit button for lectures
+  document.getElementById('detail-modal-actions').innerHTML = `
+    <button class="btn" onclick="closeDetailModal()">Schließen</button>
+    <button class="btn primary" onclick="editFromDetail()">✎ Bearbeiten</button>
+  `;
+  document.getElementById('detail-modal').classList.remove('hidden');
+}
+
+function toggleDoneFromDetail(id) {
+  const lec = data.lectures.find(l=>l.id===id);
+  if(lec && !lec.cancelled) {
+    lec.done = !lec.done; saveToLocal(); renderLectures();
+    showLectureDetail(id); toast(lec.done ? 'Als nachgeholt markiert ✓' : 'Als offen markiert');
+  }
+}
+
+function showTodoDetail(id) {
+  const todo = data.todos.find(t=>t.id===id);
+  if(!todo) return;
+  currentDetailId = id;
+  currentDetailType = 'todo';
+  document.getElementById('detail-title').innerText = '✅ Aufgabendetails';
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-row"><div class="detail-label">Aufgabe</div><div style="font-size:16px; color:var(--accent);">${escapeHtml(todo.text)}</div></div>
+    <div class="detail-row"><div class="detail-label">Fach</div><div>${escapeHtml(todo.subject) || '—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Priorität</div><div>${todo.prio === 'high' ? '⭐ Hoch' : 'Normal'}</div></div>
+    <div class="detail-row"><div class="detail-label">Status</div><div>${todo.done ? '✅ Erledigt' : '⏳ Offen'}</div></div>
+    <div class="detail-row"><div class="detail-label">Erledigt?</div><label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" ${todo.done ? 'checked' : ''} onchange="toggleTodoDoneFromDetail('${todo.id}')"> Als erledigt markieren</label></div>
+    <div class="detail-row"><div class="detail-label">Erstellt am</div><div>${todo.date || ''}</div></div>
+  `;
+  // Todos have no edit modal, so only close button
+  document.getElementById('detail-modal-actions').innerHTML = `
+    <button class="btn" onclick="closeDetailModal()">Schließen</button>
+  `;
+  document.getElementById('detail-modal').classList.remove('hidden');
+}
+
+function toggleTodoDoneFromDetail(id) {
+  const todo = data.todos.find(t=>t.id===id);
+  if(todo) { todo.done = !todo.done; saveToLocal(); renderTodos(); showTodoDetail(id); toast(todo.done ? 'Aufgabe erledigt ✓' : 'Aufgabe wieder offen'); }
+}
+
+function closeDetailModal() { document.getElementById('detail-modal').classList.add('hidden'); currentDetailId = null; currentDetailType = null; }
+
+// FIX 1: editFromDetail now works from dashboard too – closes detail, opens lec modal
+function editFromDetail() {
+  const id = currentDetailId;
+  closeDetailModal();
+  if(id) openLecModal(id);
+}
+
+// ── Schedule ─────────────────────────────────────────────────────
+function renderSchedule() {
+  const days = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
+  const container = document.getElementById('schedule-container');
+  container.innerHTML = days.map(day => {
+    const items = data.schedule.filter(e => e.day === day);
+    return `<div class="schedule-day"><h4>${day}</h4>${items.map(item => `<div class="schedule-item" onclick="deleteScheduleEntry('${item.id}')"><strong>${escapeHtml(item.subject)}</strong><div class="schedule-period">${item.startDate || '?'} – ${item.endDate || '?'}</div><span style="font-size:10px;">${escapeHtml(item.time||'')}</span></div>`).join('') || '<div style="color:var(--text3); padding:8px;">—</div>'}</div>`;
+  }).join('');
+}
+function openScheduleModal() { document.getElementById('schedule-modal').classList.remove('hidden'); document.getElementById('sched-start').value = ''; document.getElementById('sched-end').value = ''; }
+function closeScheduleModal() { document.getElementById('schedule-modal').classList.add('hidden'); }
+function saveScheduleEntry() {
+  const subject = document.getElementById('sched-subject').value.trim();
+  if(!subject) { toast('Rechtsgebiet erforderlich'); return; }
+  const startDate = document.getElementById('sched-start').value;
+  const endDate = document.getElementById('sched-end').value;
+  if(!startDate || !endDate) { toast('Bitte Start- und Enddatum des Zeitraums angeben'); return; }
+  data.schedule.push({ id: Date.now().toString(), day: document.getElementById('sched-day').value, subject, time: document.getElementById('sched-time').value.trim(), startDate, endDate });
+  saveToLocal(); renderSchedule(); closeScheduleModal(); toast('Termin hinzugefügt');
+}
+function deleteScheduleEntry(id) { if(confirm('Termin löschen?')) { data.schedule = data.schedule.filter(e => e.id !== id); saveToLocal(); renderSchedule(); toast('Entfernt'); } }
+
+function generatePastLecturesFromSchedule() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const weekdays = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+  let created = 0;
+  for (const entry of data.schedule) {
+    if (!entry.startDate || !entry.endDate) continue;
+    const [sy,sm,sd] = entry.startDate.split('-').map(Number);
+    const [ey,em,ed] = entry.endDate.split('-').map(Number);
+    const start = new Date(sy, sm-1, sd);
+    const end = new Date(ey, em-1, ed);
+    let current = new Date(start);
+    while (current <= end && current <= today) {
+      const dayName = weekdays[current.getDay()];
+      if (dayName === entry.day) {
+        const y = current.getFullYear();
+        const m = String(current.getMonth()+1).padStart(2,'0');
+        const d = String(current.getDate()).padStart(2,'0');
+        const dateStr = `${y}-${m}-${d}`;
+        // FIX 2: also skip if a cancelled lecture already exists for this date + subject
+        const alreadyExists = data.lectures.some(l => l.subject === entry.subject && l.date === dateStr);
+        if (!alreadyExists) {
+          data.lectures.push({ id: Date.now().toString() + Math.random(), title: '', subject: entry.subject, date: dateStr, link: '', note: `Generiert aus Stundenplan (${entry.day}, Zeitraum: ${entry.startDate} bis ${entry.endDate})`, prio: false, done: false, cancelled: false });
+          created++;
+          renumberSubjectLectures(entry.subject);
+        }
+      }
+      current.setDate(current.getDate() + 1);
+    }
+  }
+  saveToLocal(); renderLectures(); updateDash();
+  toast(`${created} neue Vorlesungen generiert.`);
+}
+
+// ── Notes ─────────────────────────────────────────────────────────
+function renderNotesList() { let notes = data.notes; if(noteFilter) notes = notes.filter(n => (n.title||'').toLowerCase().includes(noteFilter)); const container = document.getElementById('notes-list'); if(!notes.length) { container.innerHTML = '<div style="padding:20px;color:var(--text3);">Keine Notizen</div>'; return; } container.innerHTML = notes.map(n => `<div class="note-item ${currentNote && currentNote.id===n.id ? 'active' : ''}" onclick="openNote('${n.id}')"><div class="note-item-title">${escapeHtml(n.title || 'Ohne Titel')}</div></div>`).join(''); }
+function filterNotes(val) { noteFilter = val.toLowerCase(); renderNotesList(); }
+function newNote() { const n = { id: Date.now().toString(), title: '', body: '', tags: [], date: new Date().toLocaleDateString('de-DE') }; data.notes.unshift(n); saveToLocal(); openNote(n.id); renderNotesList(); }
+function openNote(id) { currentNote = data.notes.find(n => n.id === id); if(!currentNote) return; document.getElementById('note-content-area').style.display = 'flex'; document.querySelector('.note-editor-toolbar').innerHTML = `<span style="font-size:12px;color:var(--text3);">${currentNote.date || ''}</span>`; document.getElementById('note-title').value = currentNote.title || ''; document.getElementById('note-body').value = currentNote.body || ''; renderResearchTags(); renderNotesList(); }
+function saveNoteDebounced() { if(!currentNote) return; currentNote.title = document.getElementById('note-title').value; currentNote.body = document.getElementById('note-body').value; clearTimeout(saveTimer); saveTimer = setTimeout(() => { saveToLocal(); document.getElementById('note-saved-hint').textContent = 'gespeichert ✓'; setTimeout(() => { if(document.getElementById('note-saved-hint')) document.getElementById('note-saved-hint').textContent = ''; }, 1500); }, 600); }
+function extractTagsFromBody() { if(!currentNote) return; const body = document.getElementById('note-body').value; const found = [...body.matchAll(/#(\w+)/g)].map(m => m[1]); currentNote.tags = [...new Set(found)]; renderResearchTags(); }
+function renderResearchTags() { const area = document.getElementById('research-tags-list'); if(!area) return; const tags = currentNote ? (currentNote.tags || []) : []; area.innerHTML = tags.map((t,i) => `<div class="research-tag">${escapeHtml(t)}<button onclick="removeTag(${i})" style="background:none; border:none; color:var(--accent2); cursor:pointer;">×</button></div>`).join(''); }
+function removeTag(i) { if(currentNote) { currentNote.tags.splice(i,1); saveToLocal(); renderResearchTags(); } }
+function deleteCurrentNote() { if(currentNote && confirm('Notiz löschen?')) { data.notes = data.notes.filter(n => n.id !== currentNote.id); currentNote = null; document.getElementById('note-content-area').style.display = 'none'; document.querySelector('.note-editor-toolbar').innerHTML = '<span style="font-size:12px;color:var(--text3);">Notiz auswählen oder neu erstellen</span>'; saveToLocal(); renderNotesList(); toast('Gelöscht'); } }
+
+// ── Todos ─────────────────────────────────────────────────────────
+function populateTodoSubject() { const subjects = [...new Set(data.lectures.map(l=>l.subject).filter(Boolean))]; const sel = document.getElementById('todo-subject'); if(sel) sel.innerHTML = '<option value="">Kein Fach</option>' + subjects.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join(''); }
+function addTodo() { const val = document.getElementById('todo-input').value.trim(); if(!val) return; data.todos.push({ id: Date.now().toString(), text: val, subject: document.getElementById('todo-subject').value, prio: document.getElementById('todo-prio').value, done: false, date: new Date().toLocaleDateString() }); document.getElementById('todo-input').value = ''; saveToLocal(); renderTodos(); toast('Aufgabe hinzugefügt'); }
+function renderTodos() { let todos = [...data.todos]; if(todoFilter === 'open') todos = todos.filter(t=>!t.done); if(todoFilter === 'done') todos = todos.filter(t=>t.done); todos.sort((a,b) => { if(a.done!==b.done) return a.done?1:-1; if(a.prio!==b.prio) return a.prio==='high'?-1:1; return 0; }); const container = document.getElementById('todo-list'); if(!todos.length) { container.innerHTML = '<div class="empty-state">✅ Keine Aufgaben</div>'; return; } container.innerHTML = todos.map(t => `<div class="lecture-card ${t.done ? 'done' : ''}" onclick="showTodoDetail('${t.id}')"><div style="display:flex; align-items:center;"><div class="lec-check ${t.done ? 'checked' : ''}" onclick="event.stopPropagation(); toggleTodo('${t.id}')"></div><div class="lec-body"><div class="lec-title">${escapeHtml(t.text)}</div><div class="lec-meta">${t.subject ? escapeHtml(t.subject)+' · ' : ''}${t.date||''}</div>${t.prio==='high'?'<div class="lec-tags"><span class="tag prio">hohe Priorität</span></div>':''}${t.done?'<div class="lec-tags"><span class="tag done-tag">erledigt</span></div>':''}</div><div class="lec-actions"><button class="btn small danger" onclick="event.stopPropagation(); deleteTodo(\''+t.id+'\')">✕</button></div></div></div>`).join(''); }
+function toggleTodo(id) { const t = data.todos.find(x=>x.id===id); if(t) { t.done = !t.done; saveToLocal(); renderTodos(); updateDash(); } }
+function deleteTodo(id) { data.todos = data.todos.filter(x=>x.id!==id); saveToLocal(); renderTodos(); toast('Gelöscht'); }
+function setTodoFilter(btn,val) { todoFilter=val; document.querySelectorAll('.filter-btn[data-tf]').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderTodos(); }
+
+// ── Modal close on backdrop click ────────────────────────────────
+document.getElementById('lec-modal').addEventListener('click', e => { if(e.target === document.getElementById('lec-modal')) closeLecModal(); });
+document.getElementById('detail-modal').addEventListener('click', e => { if(e.target === document.getElementById('detail-modal')) closeDetailModal(); });
+document.getElementById('schedule-modal').addEventListener('click', e => { if(e.target === document.getElementById('schedule-modal')) closeScheduleModal(); });
+document.getElementById('import-modal').addEventListener('click', e => { if(e.target === document.getElementById('import-modal')) closeImportModal(); });
+
+// ── Init ──────────────────────────────────────────────────────────
+renderLectures(); renderSchedule(); renderTodos(); updateDash();
+</script>
+</body>
+</html>
