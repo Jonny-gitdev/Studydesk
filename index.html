@@ -234,7 +234,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const fakeInput = { files: [file] }; handleImportFile(fakeInput);
   });
 });
+document.addEventListener('DOMContentLoaded', function() {
+    generatePastLecturesFromSchedule()
+  });
 
+  
 // ── Nummerierung ─────────────────────────────────────────────────
 // Renumbering: only non-cancelled lectures count, sorted by date
 function renumberSubjectLectures(subject) {
