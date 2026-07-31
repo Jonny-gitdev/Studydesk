@@ -1083,7 +1083,9 @@ function saveSubjectQueueEntry() {
   } else {
     data.subjectQueue.push({ id: Date.now().toString(), subject, units, remaining: units });
   }
-  saveToLocal(); closeSubjectQueueModal(); renderSubjectQueue(); toast('Gespeichert');
+  saveToLocal(); closeSubjectQueueModal(); renderSubjectQueue();
+  if (lernplanTab === 'week') renderWeekCalendar();
+  toast('Gespeichert');
 }
 function deleteSubjectQueueEntry(id) {
   if (!confirm('Rechtsgebiet aus der Warteschlange entfernen?')) return;
@@ -1143,14 +1145,59 @@ function peekNextSubject() {
   }
   return lastAlternatingSubjectId === first.id ? second : first;
 }
-// Eine Einheit verbrauchen
-function consumeNextSubjectUnit() {
+function peekNextSubjectInState(queueState, lastId) {
+  const candidates = queueState.filter(e => e.remaining > 0);
+  if (!candidates.length) return null;
+  if (candidates.length === 1) return candidates[0];
+  const first = candidates[0];
+  const second = candidates[1];
+  if (!lastId || !candidates.some(x => x.id === lastId)) {
+    return first;
+  }
+  return lastId === first.id ? second : first;
+}
+function consumeSubjectUnit(subjectName) {
+  if (subjectName) {
+    const specific = data.subjectQueue.find(x => x.subject === subjectName && x.remaining > 0);
+    if (specific) {
+      specific.remaining -= 1;
+      lastAlternatingSubjectId = specific.id;
+      saveToLocal();
+      return specific.subject;
+    }
+  }
   const e = peekNextSubject();
   if (!e) return null;
   e.remaining -= 1;
   lastAlternatingSubjectId = e.id;
   saveToLocal();
   return e.subject;
+}
+function assignSubjectsToSlots(dateStrs) {
+  const queueState = data.subjectQueue.map(e => ({ ...e }));
+  const normalized = [...new Set(dateStrs)].sort();
+  normalized.forEach(dateStr => {
+    const slots = data.weekPlanDays[dateStr] || [];
+    slots.forEach(slot => {
+      if (slot.type === 'rechtsgebiet' && !slot.done && slot.subject) {
+        const q = queueState.find(x => x.subject === slot.subject);
+        if (q && q.remaining > 0) q.remaining -= 1;
+      }
+    });
+  });
+  let tempLastId = lastAlternatingSubjectId && queueState.some(x => x.id === lastAlternatingSubjectId) ? lastAlternatingSubjectId : null;
+  normalized.forEach(dateStr => {
+    const slots = data.weekPlanDays[dateStr] || [];
+    slots.forEach(slot => {
+      if (slot.type !== 'rechtsgebiet' || slot.done || slot.subject) return;
+      const next = peekNextSubjectInState(queueState, tempLastId);
+      if (!next) return;
+      slot.subject = next.subject;
+      tempLastId = next.id;
+      const q = queueState.find(x => x.id === next.id);
+      if (q && q.remaining > 0) q.remaining -= 1;
+    });
+  });
 }
 // Eine Einheit "zurückgeben" (wenn ein Slot storniert/ungeschehen gemacht wird)
 function refundSubjectUnit(subjectName) {
@@ -1175,12 +1222,49 @@ function addWeekPlanTemplateSlot() {
     return dayA - dayB || a.time.localeCompare(b.time);
   });
   saveToLocal(); renderWeekPlanTemplateList();
+  if (lernplanTab === 'week') renderWeekCalendar();
   document.getElementById('wpt-time').value = ''; document.getElementById('wpt-label').value = '';
   toast('Slot zur Vorlage hinzugefügt');
 }
 function deleteWeekPlanTemplateSlot(id) {
   data.weekPlanSlots = data.weekPlanSlots.filter(s => s.id !== id);
   saveToLocal(); renderWeekPlanTemplateList();
+  if (lernplanTab === 'week') renderWeekCalendar();
+}
+function syncDayWithTemplate(dateStr) {
+  const dateObj = new Date(dateStr + 'T00:00:00');
+  if (isNaN(dateObj)) return false;
+  const dayName = WEEKDAY_NAMES[dateObj.getDay()];
+  const templateSlots = data.weekPlanSlots.filter(s => s.day === dayName).sort((a, b) => a.time.localeCompare(b.time));
+  const existing = data.weekPlanDays[dateStr] || [];
+  let added = false;
+  templateSlots.forEach(t => {
+    const exists = existing.some(s => s.time === t.time && s.type === t.type && s.label === t.label);
+    if (!exists) {
+      existing.push({ id: Date.now().toString() + Math.random().toString(36).slice(2), time: t.time, type: t.type, label: t.label, subject: null, done: false, shifted: false });
+      added = true;
+    }
+  });
+  if (added) {
+    existing.sort((a, b) => a.time.localeCompare(b.time));
+    data.weekPlanDays[dateStr] = existing;
+  }
+  return added;
+}
+function ensureDayGenerated(dateStr) {
+  const dateObj = new Date(dateStr + 'T00:00:00');
+  if (isNaN(dateObj)) return false;
+  const dayName = WEEKDAY_NAMES[dateObj.getDay()];
+  const templateSlots = data.weekPlanSlots.filter(s => s.day === dayName).sort((a,b) => a.time.localeCompare(b.time));
+  if (!data.weekPlanDays[dateStr] || !data.weekPlanDays[dateStr].length) {
+    data.weekPlanDays[dateStr] = templateSlots.map(s => ({
+      id: Date.now().toString() + Math.random().toString(36).slice(2),
+      time: s.time, type: s.type, label: s.label,
+      subject: null, done: false, shifted: false
+    }));
+    return true;
+  }
+  return syncDayWithTemplate(dateStr);
 }
 function renderWeekPlanTemplateList() {
   const container = document.getElementById('wpt-list');
@@ -1197,25 +1281,10 @@ function renderWeekPlanTemplateList() {
   }).join('');
 }
 
-// Erstellt (falls noch nicht vorhanden) die konkreten Slots für ein Datum aus der Vorlage
-function ensureDayGenerated(dateStr) {
-  const dateObj = new Date(dateStr + 'T00:00:00');
-  if (isNaN(dateObj)) return;
-  const dayName = WEEKDAY_NAMES[dateObj.getDay()];
-  const templateSlots = data.weekPlanSlots.filter(s => s.day === dayName).sort((a,b) => a.time.localeCompare(b.time));
-  if (!data.weekPlanDays[dateStr] || (Array.isArray(data.weekPlanDays[dateStr]) && data.weekPlanDays[dateStr].length === 0)) {
-    data.weekPlanDays[dateStr] = templateSlots.map(s => ({
-      id: Date.now().toString() + Math.random().toString(36).slice(2),
-      time: s.time, type: s.type, label: s.label,
-      subject: null, done: false, shifted: false
-    }));
-  }
-}
-
 function regenerateFromTemplate() {
   if (!confirm('Der sichtbare Kalender wird für aktuelle und zukünftige Wochen neu aus der Vorlage generiert. Bereits individuell bearbeitete Tage in der Vergangenheit bleiben erhalten, zukünftige leere Tage werden neu befüllt. Fortfahren?')) return;
-  // Nur Tage generieren, die noch nicht existieren (nicht überschreiben) -> ruft ensureDayGenerated beim Rendern auf.
   closeWeekPlanTemplateModal();
+  Object.keys(data.weekPlanDays).sort().forEach(dateStr => ensureDayGenerated(dateStr));
   if (!currentWeekStart) currentWeekStart = getMonday(new Date());
   renderWeekCalendar();
   toast('Kalender aktualisiert');
@@ -1236,10 +1305,20 @@ function renderWeekCalendar() {
   document.getElementById('week-range-label').textContent = `${fmtDate(currentWeekStart)} – ${fmtDate(weekEnd)}`;
 
   let html = '';
+  let weekDates = [];
+  let changed = false;
   for (let i = 0; i < 7; i++) {
     const d = addDays(currentWeekStart, i);
     const dateStr = fmtDate(d);
-    ensureDayGenerated(dateStr);
+    weekDates.push(dateStr);
+    if (ensureDayGenerated(dateStr)) changed = true;
+  }
+  if (assignSubjectsToSlots(weekDates)) changed = true;
+  if (changed) saveToLocal();
+
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(currentWeekStart, i);
+    const dateStr = fmtDate(d);
     const slots = data.weekPlanDays[dateStr] || [];
     const dayName = WEEKDAY_NAMES[d.getDay()];
     const isToday = dateStr === todayStr;
@@ -1263,12 +1342,10 @@ function renderWeekCalendar() {
 
 // Beim ersten Rendern eines "rechtsgebiet"-Slots das nächste Fach aus der Queue ziehen (nur einmal, lazy)
 function assignSubjectIfNeeded(dateStr, slotId) {
-  const slot = data.weekPlanDays[dateStr]?.find(s => s.id === slotId);
-  if (slot && slot.type === 'rechtsgebiet' && !slot.subject && !slot.done) {
-    // Nur zuweisen (nicht verbrauchen) zur Anzeige - Verbrauch geschieht erst bei "erledigt"
-    const next = peekNextSubject();
-    if (next) slot.subject = next.subject;
-  }
+  // Aktualisierung durch Woche rendern, damit aktuelle Queue-Reihenfolge und bereits
+  // zugewiesene Termine konsistent bleiben.
+  assignSubjectsToSlots([dateStr]);
+  saveToLocal();
 }
 
 // ── Slot Detail / Bearbeiten ──────────────────────────────────────
@@ -1308,7 +1385,7 @@ function saveSlotDetail() {
   }
   // Wenn frisch als erledigt markiert und es ein Rechtsgebiets-Slot ist -> Einheit aus Queue verbrauchen
   if (!wasDone && nowDone && slot.type === 'rechtsgebiet') {
-    const consumed = consumeNextSubjectUnit();
+    const consumed = consumeSubjectUnit(slot.subject);
     if (consumed) slot.subject = consumed;
   }
   // Wenn erledigt rückgängig gemacht wird -> Einheit zurückgeben
@@ -1366,22 +1443,20 @@ function markSlotNotDoneAndShift() {
   //    des vorherigen Elements der Sequenz überschrieben -> praktisch heißt das: wir schieben den Inhalt aller
   //    Elemente um 1 nach hinten und der erste Slot wird frei/leer (neuer, unbelegter Slot-Typ "frei").
   const contents = sequence.map(f => ({ type: f.slot.type, label: f.slot.label, subject: f.slot.subject, done: f.slot.done, shifted: f.slot.shifted }));
-  // Den Inhalt des verschobenen (ersten) Slots merken, um ihn ans Ende der Verschiebekette zu setzen (rutscht mit).
-  const movedContent = contents[0];
-  for (let i = 0; i < sequence.length - 1; i++) {
-    sequence[i].slot.type = contents[i+1].type;
-    sequence[i].slot.label = contents[i+1].label;
-    sequence[i].slot.subject = contents[i+1].subject;
-    sequence[i].slot.done = contents[i+1].done;
-    sequence[i].slot.shifted = contents[i+1].shifted;
+  // Der ursprüngliche Slot wird frei, alle folgenden Einträge rücken nach hinten.
+  for (let i = sequence.length - 1; i > 0; i--) {
+    sequence[i].slot.type = contents[i-1].type;
+    sequence[i].slot.label = contents[i-1].label;
+    sequence[i].slot.subject = contents[i-1].subject;
+    sequence[i].slot.done = contents[i-1].done;
+    sequence[i].slot.shifted = contents[i-1].shifted;
   }
-  // Letztes Element der Sequenz bekommt den verschobenen Inhalt (rutscht ganz nach hinten)
-  const last = sequence[sequence.length - 1].slot;
-  last.type = movedContent.type;
-  last.label = movedContent.label;
-  last.subject = movedContent.subject;
-  last.done = false; // der verschobene Termin ist noch nicht erledigt
-  last.shifted = true;
+  const first = sequence[0].slot;
+  first.type = 'frei';
+  first.label = TYPE_LABELS.frei;
+  first.subject = null;
+  first.done = false;
+  first.shifted = true;
 
   const targetDateStr = sequence[sequence.length - 1].dateStr;
   saveToLocal();
