@@ -2,1500 +2,1187 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StudyDesk</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
   :root {
-    --paper: #f7efe0;
-    --paper-2: #efe2c8;
-    --paper-3: #fdf8ee;
-    --ink: #3d2f1f;
-    --ink-2: #6b5840;
-    --ink-3: #8d7557;
-    --accent: #8a3324;
-    --accent-2: #7a8b4f;
-    --accent-3: #b88c44;
-    --line: #c8b089;
-    --line-2: #d7c7a4;
-    --danger: #a34334;
-    --success: #5f7a45;
-    --shadow: rgba(73, 48, 17, 0.16);
+    --bg:#f5f2ee; --surface:#ffffff; --surface-elevated:#faf9f7; --surface-hover:#f0ede8;
+    --ink:#1f1c1a; --ink-secondary:#5c5650; --ink-tertiary:#8a8279;
+    --accent:#b85c48; --accent-hover:#a34d3a; --accent-soft:rgba(184,92,72,0.08); --accent-soft-hover:rgba(184,92,72,0.14);
+    --success:#5a8a5a; --success-soft:rgba(90,138,90,0.10); --warning:#c4943a;
+    --danger:#b84a4a; --danger-soft:rgba(184,74,74,0.10);
+    --border:#e6e1db; --border-light:#f0ebe5;
+    --shadow-sm:0 1px 2px rgba(31,28,26,0.04),0 1px 3px rgba(31,28,26,0.02);
+    --shadow:0 4px 12px rgba(31,28,26,0.06),0 1px 3px rgba(31,28,26,0.04);
+    --shadow-lg:0 12px 32px rgba(31,28,26,0.10),0 4px 8px rgba(31,28,26,0.04);
+    --shadow-xl:0 24px 48px rgba(31,28,26,0.14),0 8px 16px rgba(31,28,26,0.06);
+    --radius-sm:8px; --radius:12px; --radius-lg:16px; --radius-xl:20px;
+    --transition:all 0.2s cubic-bezier(0.4,0,0.2,1);
+    --transition-slow:all 0.35s cubic-bezier(0.4,0,0.2,1);
   }
-
-  body {
-    font-family: 'Source Serif 4', 'Georgia', serif;
-    background: linear-gradient(135deg, #e8dcc8 0%, #dfceb0 100%);
-    color: var(--ink);
-    min-height: 100vh;
-    padding: 24px;
-    line-height: 1.5;
-    position: relative;
-    overflow-x: hidden;
-  }
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(circle at top left, rgba(255,255,255,0.32), transparent 35%),
-      linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px),
-      linear-gradient(rgba(0,0,0,0.025) 1px, transparent 1px);
-    background-size: auto, 18px 18px, 18px 18px;
-    pointer-events: none;
-    mix-blend-mode: multiply;
-    opacity: 0.55;
-  }
-  .page-bg { max-width: 1320px; margin: 0 auto; position: relative; }
-  .paper-shell {
-    position: relative;
-    background: linear-gradient(180deg, var(--paper-3) 0%, var(--paper) 100%);
-    border: 1px solid var(--line);
-    border-radius: 24px;
-    box-shadow: 0 16px 44px var(--shadow);
-    overflow: hidden;
-    backdrop-filter: blur(2px);
-  }
-  .paper-shell::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(0deg, rgba(120,93,51,0.035), rgba(120,93,51,0.035) 1px, transparent 1px, transparent 26px);
-    pointer-events: none;
-    opacity: 0.35;
-  }
-
-  header {
-    padding: 26px 36px 18px;
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-    background: linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.2) 100%);
-    border-bottom: 1px solid var(--line);
-    position: relative;
-  }
-  .header-left { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
-  header h1 {
-    font-size: 26px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    color: var(--accent);
-    text-transform: uppercase;
-  }
-  header span {
-    font-size: 13px;
-    color: var(--ink-2);
-    font-family: 'IBM Plex Mono', monospace;
-    letter-spacing: 0.04em;
-  }
-  .header-actions { display: flex; gap: 10px; align-items: center; }
-
-  .nav {
-    display: flex;
-    gap: 8px;
-    padding: 14px 36px;
-    background: linear-gradient(180deg, rgba(239,226,200,0.85) 0%, rgba(244,232,213,0.95) 100%);
-    border-bottom: 1px solid var(--line);
-    flex-wrap: wrap;
-  }
-  .nav-btn {
-    padding: 8px 16px;
-    border-radius: 999px;
-    border: 1px solid transparent;
-    background: transparent;
-    color: var(--ink-2);
-    font-size: 13px;
-    cursor: pointer;
-    font-family: 'IBM Plex Mono', monospace;
-    letter-spacing: 0.04em;
-    transition: all 0.2s ease;
-  }
-  .nav-btn:hover {
-    color: var(--accent);
-    border-color: var(--line);
-    background: rgba(255,255,255,0.4);
-    transform: translateY(-1px);
-  }
-  .nav-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-    box-shadow: 0 6px 16px rgba(138,51,36,0.2);
-  }
-
-  .main { padding: 30px 36px 42px; overflow: auto; position: relative; }
-  .section { display: none; animation: fadeUp 0.28s ease; }
-  .section.active { display: block; }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .folder-card, .panel-card {
-    background: linear-gradient(180deg, var(--paper-3) 0%, rgba(252,247,236,0.95) 100%);
-    border: 1px solid var(--line-2);
-    border-radius: 18px;
-    padding: 24px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 10px 24px rgba(82,57,23,0.08);
-    margin-bottom: 20px;
-  }
-  .panel-title {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--ink-2);
-    margin-bottom: 12px;
-  }
-  .dash-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 18px;
-    margin-bottom: 22px;
-  }
-  .stat-card {
-    background: linear-gradient(180deg, rgba(255,255,255,0.72) 0%, rgba(246,234,214,0.95) 100%);
-    border: 1px solid var(--line-2);
-    border-radius: 16px;
-    padding: 22px 24px;
-    position: relative;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
-  }
-  .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: rgba(138,51,36,0.16);
-  }
-  .stat-card .label { font-size: 11px; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; font-family: 'IBM Plex Mono', monospace; }
-  .stat-card .val { font-size: 32px; font-weight: 700; color: var(--ink); }
-  .stat-card .sub { font-size: 13px; color: var(--ink-2); margin-top: 4px; }
-  .progress-bar-outer { background: rgba(138,51,36,0.1); border-radius: 999px; height: 6px; margin-top: 12px; overflow: hidden; }
-  .progress-bar-inner { height: 6px; border-radius: 999px; background: linear-gradient(90deg, var(--accent) 0%, var(--accent-3) 100%); transition: width 0.35s ease; }
-
-  .toolbar {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 18px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .toolbar input, .toolbar select {
-    background: rgba(255,255,255,0.72);
-    border: 1px solid var(--line-2);
-    border-radius: 10px;
-    padding: 10px 12px;
-    color: var(--ink);
-    font-size: 14px;
-    font-family: 'Source Serif 4', serif;
-    outline: none;
-    min-height: 42px;
-  }
-  .btn {
-    background: linear-gradient(180deg, #f8f0e3 0%, #efe2c5 100%);
-    border: 1px solid var(--line-2);
-    border-radius: 999px;
-    padding: 10px 16px;
-    color: var(--ink);
-    font-size: 13px;
-    cursor: pointer;
-    font-family: 'IBM Plex Mono', monospace;
-    letter-spacing: 0.04em;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-    white-space: nowrap;
-    box-shadow: 0 4px 12px rgba(82,57,23,0.06);
-  }
-  .btn:hover { transform: translateY(-1px); border-color: var(--accent); box-shadow: 0 8px 18px rgba(82,57,23,0.12); }
-  .btn.primary {
-    background: linear-gradient(135deg, var(--accent) 0%, #a54835 100%);
-    color: white;
-    border-color: var(--accent);
-  }
-  .btn.danger { border-color: rgba(163,67,52,0.5); color: var(--danger); }
-  .btn.small { padding: 7px 12px; font-size: 12px; border-radius: 999px; }
-
-  .filter-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-  .filter-btn {
-    padding: 6px 12px;
-    border-radius: 999px;
-    border: 1px solid var(--line-2);
-    background: transparent;
-    color: var(--ink-2);
-    font-size: 12px;
-    cursor: pointer;
-    font-family: 'IBM Plex Mono', monospace;
-    letter-spacing: 0.04em;
-    transition: all 0.2s ease;
-  }
-  .filter-btn.active {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: rgba(138,51,36,0.08);
-  }
-
-  .todo-quick-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px dashed var(--line-2); font-size: 14px; cursor: pointer; transition: background 0.2s ease; }
-  .todo-quick-item:last-child { border-bottom: none; }
-  .todo-quick-item:hover { background: rgba(255,255,255,0.45); border-radius: 10px; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
-  .dot.prio { background: var(--danger); }
-  .lec-date-badge { font-size: 11px; color: var(--ink-2); font-family: 'IBM Plex Mono', monospace; margin-left: auto; }
-
-  .lecture-card {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(250,240,222,0.9) 100%);
-    border: 1px solid var(--line-2);
-    border-radius: 14px;
-    padding: 16px 18px;
-    margin-bottom: 10px;
-    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 4px 14px rgba(82,57,23,0.06);
-    position: relative;
-  }
-  .lecture-card:hover { transform: translateY(-1px); border-color: var(--accent); box-shadow: 0 8px 20px rgba(82,57,23,0.1); }
-  .lecture-card.done { background: linear-gradient(180deg, rgba(245,238,226,0.9) 0%, rgba(238,228,208,0.95) 100%); }
-  .lecture-card.cancelled { opacity: 0.62; border-style: dashed; }
-  .lecture-card.done::after {
-    content: 'ERLEDIGT';
-    position: absolute;
-    top: 12px;
-    right: 18px;
-    padding: 4px 8px;
-    border: 1px solid rgba(95,122,69,0.3);
-    border-radius: 999px;
-    color: var(--success);
-    font-size: 10px;
-    font-family: 'IBM Plex Mono', monospace;
-    letter-spacing: 0.1em;
-    transform: rotate(-8deg);
-  }
-  .lecture-card.cancelled::after {
-    content: 'AUSGEFALLEN';
-    position: absolute;
-    top: 12px;
-    right: 18px;
-    padding: 4px 8px;
-    border: 1px solid rgba(163,67,52,0.32);
-    border-radius: 999px;
-    color: var(--danger);
-    font-size: 10px;
-    font-family: 'IBM Plex Mono', monospace;
-    letter-spacing: 0.1em;
-    transform: rotate(-8deg);
-  }
-  .lec-check {
-    width: 22px;
-    height: 22px;
-    border: 1.5px solid var(--line-2);
-    border-radius: 50%;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-  .lec-check.checked { background: var(--accent); border-color: var(--accent); }
-  .lec-check.checked::after { content: '✓'; font-size: 11px; color: white; font-weight: 700; }
-  .lec-body { flex: 1; min-width: 0; }
-  .lec-title { font-size: 16px; color: var(--ink); margin-bottom: 3px; font-weight: 600; cursor: pointer; display: inline-block; }
-  .lec-title:hover { color: var(--accent); }
-  .lec-meta { font-size: 12px; color: var(--ink-2); font-family: 'IBM Plex Mono', monospace; }
-  .lec-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-  .tag { padding: 3px 8px; border-radius: 999px; background: rgba(122,139,79,0.12); border: 1px solid rgba(122,139,79,0.3); font-size: 11px; color: var(--accent-2); font-family: 'IBM Plex Mono', monospace; }
-  .tag.prio { background: rgba(163,67,52,0.12); border-color: rgba(163,67,52,0.3); color: var(--danger); }
-  .tag.cancelled { background: rgba(163,67,52,0.1); border-color: rgba(163,67,52,0.25); color: var(--danger); }
-  .tag.done-tag { background: rgba(95,122,69,0.12); border-color: rgba(95,122,69,0.3); color: var(--success); }
-  .lec-actions { display: inline-flex; gap: 6px; margin-left: auto; }
-
-  .schedule-grid { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 20px; }
-  .schedule-day {
-    min-width: 220px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.72) 0%, rgba(247,239,224,0.95) 100%);
-    border: 1px solid var(--line-2);
-    border-radius: 16px;
-    padding: 14px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
-  }
-  .schedule-day h4 {
-    font-size: 15px;
-    color: var(--accent);
-    margin-bottom: 12px;
-    border-bottom: 1px solid var(--line-2);
-    padding-bottom: 8px;
-  }
-  .schedule-item {
-    background: linear-gradient(180deg, rgba(255,255,255,0.78) 0%, rgba(250,241,226,0.95) 100%);
-    margin-bottom: 8px;
-    padding: 10px 12px;
-    border-radius: 12px;
-    font-size: 13px;
-    border-left: 3px solid var(--accent);
-    cursor: grab;
-    box-shadow: 0 4px 10px rgba(82,57,23,0.05);
-    transition: transform 0.2s ease, border-color 0.2s ease;
-  }
-  .schedule-item:hover { transform: translateY(-1px); border-left-color: var(--accent-3); }
-  .schedule-item .schedule-period { font-size: 11px; color: var(--ink-2); margin-top: 4px; font-family: 'IBM Plex Mono', monospace; }
-  .schedule-item .schedule-meta { margin-top: 4px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  .schedule-drop-target { border: 1px dashed var(--line); border-radius: 12px; padding: 8px; margin-top: 4px; transition: border-color 0.2s ease, background 0.2s ease; }
-  .schedule-drop-target.active { border-color: var(--accent); background: rgba(138,51,36,0.08); }
-  .schedule-empty { color: var(--ink-2); font-size: 12px; padding: 8px 0; }
-
-  .modal-bg { position: fixed; inset: 0; background: rgba(28,19,9,0.68); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
-  .modal-bg.hidden { display: none; }
-  .modal {
-    background: linear-gradient(180deg, rgba(255,249,239,0.98) 0%, rgba(245,233,213,0.98) 100%);
-    border: 1px solid var(--line);
-    border-radius: 24px;
-    padding: 28px 30px;
-    width: 600px;
-    max-width: 100%;
-    max-height: 88vh;
-    overflow-y: auto;
-    box-shadow: 0 24px 60px rgba(23,15,7,0.24);
-  }
-  .modal h2 { font-size: 20px; font-weight: 700; margin-bottom: 18px; color: var(--accent); }
-  .modal label { display: block; font-size: 11px; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; margin-top: 12px; font-family: 'IBM Plex Mono', monospace; }
-  .modal input, .modal select, .modal textarea { width: 100%; background: rgba(255,255,255,0.82); border: 1px solid var(--line-2); border-radius: 12px; padding: 10px 12px; color: var(--ink); font-size: 14px; font-family: 'Source Serif 4', serif; }
-  input[type="date"] { color-scheme: light; font-family: 'IBM Plex Mono', monospace; }
-  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
-
-  .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-2); }
-  .date-range { display: flex; gap: 10px; align-items: center; }
-  .date-range input { flex: 1; }
-
-  .notes-layout { display: grid; grid-template-columns: 280px 1fr; gap: 18px; min-height: 520px; }
-  .notes-sidebar { background: linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(245,233,213,0.95) 100%); border: 1px solid var(--line-2); border-radius: 16px; overflow: hidden; }
-  .notes-sidebar-header { padding: 14px 16px; border-bottom: 1px solid var(--line-2); font-size: 11px; text-transform: uppercase; color: var(--ink-2); font-family: 'IBM Plex Mono', monospace; }
-  .note-item { padding: 12px 16px; border-bottom: 1px solid var(--line-2); cursor: pointer; transition: background 0.2s ease; }
-  .note-item:hover { background: rgba(255,255,255,0.5); }
-  .note-item.active { background: rgba(138,51,36,0.08); border-left: 3px solid var(--accent); }
-  .note-item-title { font-size: 14px; color: var(--ink); margin-bottom: 3px; }
-  .note-editor { background: linear-gradient(180deg, rgba(255,255,255,0.82) 0%, rgba(246,235,215,0.96) 100%); border: 1px solid var(--line-2); border-radius: 16px; }
-  .note-title-input { background: transparent; border: none; color: var(--ink); font-size: 20px; font-family: 'Source Serif 4', serif; padding: 20px 24px 8px; outline: none; width: 100%; }
-  .note-textarea { background: transparent; border: none; color: var(--ink); font-size: 15px; font-family: 'Source Serif 4', serif; padding: 16px 24px; outline: none; line-height: 1.8; resize: vertical; min-height: 320px; width: 100%; }
-  .research-tags { padding: 8px 24px 16px; display: flex; gap: 6px; flex-wrap: wrap; border-top: 1px solid var(--line-2); }
-  .research-tag { display: flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; background: rgba(122,139,79,0.12); border: 1px solid rgba(122,139,79,0.3); font-size: 11px; color: var(--accent-2); }
-  #toast { position: fixed; bottom: 24px; right: 24px; background: rgba(61,47,31,0.95); color: white; border-radius: 999px; padding: 10px 18px; z-index: 200; transition: all 0.25s ease; opacity: 0; transform: translateY(20px); font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
-  #toast.show { opacity: 1; transform: translateY(0); }
-  .detail-row { margin-bottom: 12px; }
-  .detail-label { color: var(--ink-2); font-family: 'IBM Plex Mono', monospace; font-size: 11px; text-transform: uppercase; margin-bottom: 4px; }
-  .import-drop { border: 1.5px dashed var(--line); border-radius: 14px; padding: 24px; text-align: center; color: var(--ink-2); cursor: pointer; margin-top: 16px; transition: border-color 0.2s ease, color 0.2s ease; }
-  .import-drop:hover { border-color: var(--accent); color: var(--accent); }
-
-  .queue-item {
-    display: flex; align-items: center; gap: 14px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(249,240,224,0.92) 100%);
-    border: 1px solid var(--line-2);
-    border-radius: 14px;
-    padding: 14px 16px;
-    margin-bottom: 10px;
-    cursor: grab;
-    box-shadow: 0 4px 10px rgba(82,57,23,0.05);
-  }
-  .queue-item.active-item { border-color: var(--accent); background: rgba(138,51,36,0.08); }
-  .queue-pos { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-2); width: 24px; text-align: center; }
-  .queue-info { flex: 1; }
-  .queue-subject { font-size: 15px; color: var(--ink); font-weight: 600; }
-  .queue-units { font-size: 12px; color: var(--ink-2); font-family: 'IBM Plex Mono', monospace; margin-top: 2px; }
-  .queue-progress-outer { background: rgba(138,51,36,0.12); border-radius: 999px; height: 6px; margin-top: 8px; width: min(240px, 100%); overflow: hidden; }
-  .queue-progress-inner { height: 6px; border-radius: 999px; background: linear-gradient(90deg, var(--accent-2) 0%, var(--accent-3) 100%); }
-  .week-day-col { min-width: 220px; }
-  .week-slot {
-    background: linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(250,240,221,0.92) 100%);
-    margin-bottom: 8px;
-    padding: 10px 12px;
-    border-radius: 12px;
-    font-size: 13px;
-    border-left: 3px solid var(--accent);
-    cursor: pointer;
-    position: relative;
-    box-shadow: 0 4px 10px rgba(82,57,23,0.05);
-  }
-  .week-slot:hover { transform: translateY(-1px); }
-  .week-slot.type-klausur { border-left-color: var(--danger); }
-  .week-slot.type-karteikarten { border-left-color: var(--accent-2); }
-  .week-slot.type-frei { border-left-color: var(--ink-3); }
-  .week-slot.slot-done { opacity: 0.6; }
-  .week-slot .slot-time { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-2); }
-  .week-slot .slot-label { margin-top: 3px; }
-  .week-slot .slot-shifted-badge { position: absolute; top: 8px; right: 8px; font-size: 10px; color: var(--danger); }
-  .week-day-col h4.today { color: var(--accent-2); }
-  .lernplan-guide {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-    margin-bottom: 16px;
-  }
-  .guide-step {
-    background: rgba(255,255,255,0.64);
-    border: 1px solid var(--line-2);
-    border-radius: 14px;
-    padding: 14px;
-  }
-  .guide-step strong { display: block; margin-bottom: 6px; color: var(--accent); }
-  .guide-step small { color: var(--ink-2); line-height: 1.5; }
-  @media (max-width: 920px) {
-    .dash-grid, .lernplan-guide { grid-template-columns: 1fr; }
-    .notes-layout { grid-template-columns: 1fr; }
-    .main { padding: 24px 20px 30px; }
-    header, .nav { padding-left: 20px; padding-right: 20px; }
-  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+  .sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 16px;position:sticky;top:0;height:100vh;z-index:50}
+  .sidebar-brand{display:flex;align-items:center;gap:12px;padding:0 12px 24px;border-bottom:1px solid var(--border-light);margin-bottom:16px}
+  .brand-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),#c97a5e);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:18px;font-weight:700;box-shadow:0 2px 8px rgba(184,92,72,0.25)}
+  .brand-text{font-size:20px;font-weight:700;letter-spacing:-0.02em;color:var(--ink)}
+  .brand-sub{font-size:11px;color:var(--ink-tertiary);font-family:'JetBrains Mono',monospace;margin-top:-2px}
+  .nav-group{display:flex;flex-direction:column;gap:2px;flex:1}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius);border:none;background:transparent;color:var(--ink-secondary);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:var(--transition);position:relative}
+  .nav-item:hover{background:var(--surface-hover);color:var(--ink)}
+  .nav-item.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--accent);border-radius:0 3px 3px 0}
+  .nav-icon{font-size:18px;width:22px;text-align:center}
+  .sidebar-footer{padding-top:16px;border-top:1px solid var(--border-light);display:flex;gap:8px}
+  .sidebar-footer .btn-icon{flex:1;justify-content:center;padding:8px;font-size:13px}
+  .main{display:flex;flex-direction:column;min-height:100vh}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 32px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:40}
+  .topbar-left{display:flex;align-items:center;gap:16px}
+  .page-title{font-size:22px;font-weight:700;letter-spacing:-0.02em}
+  .date-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:var(--surface-hover);border-radius:999px;font-size:13px;color:var(--ink-secondary);font-family:'JetBrains Mono',monospace;border:1px solid var(--border-light)}
+  .topbar-actions{display:flex;gap:10px;align-items:center}
+  .content{padding:28px 32px 48px;flex:1;max-width:1200px}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--ink-secondary);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:var(--transition);white-space:nowrap}
+  .btn:hover{border-color:var(--ink-tertiary);color:var(--ink);transform:translateY(-1px);box-shadow:var(--shadow)}
+  .btn:active{transform:translateY(0)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:white;box-shadow:0 2px 8px rgba(184,92,72,0.25)}
+  .btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);box-shadow:0 4px 14px rgba(184,92,72,0.35)}
+  .btn.ghost{background:transparent;border-color:transparent}
+  .btn.ghost:hover{background:var(--surface-hover)}
+  .btn.danger{color:var(--danger);border-color:rgba(184,74,74,0.3)}
+  .btn.danger:hover{background:var(--danger-soft);border-color:var(--danger)}
+  .btn.success{background:var(--success);border-color:var(--success);color:white}
+  .btn.small{padding:6px 12px;font-size:12px;border-radius:var(--radius-sm)}
+  .btn-icon{padding:8px;border-radius:var(--radius-sm);justify-content:center;min-width:36px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow-sm);transition:var(--transition)}
+  .card:hover{box-shadow:var(--shadow)}
+  .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .card-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-tertiary)}
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;position:relative;overflow:hidden;transition:var(--transition)}
+  .stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+  .stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),#d4a08a);opacity:0.6}
+  .stat-card.success::after{background:linear-gradient(90deg,var(--success),#8ab88a)}
+  .stat-card.info::after{background:linear-gradient(90deg,#6b8f9e,#9ab8c4)}
+  .stat-label{font-size:12px;color:var(--ink-tertiary);font-weight:500;margin-bottom:6px}
+  .stat-value{font-size:32px;font-weight:700;letter-spacing:-0.02em;color:var(--ink)}
+  .stat-sub{font-size:13px;color:var(--ink-secondary);margin-top:4px}
+  .progress-track{background:var(--border-light);border-radius:999px;height:6px;margin-top:14px;overflow:hidden}
+  .progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent),#d4a08a);transition:width 0.5s cubic-bezier(0.4,0,0.2,1)}
+  .toolbar{display:flex;gap:10px;margin-bottom:20px;align-items:center;flex-wrap:wrap}
+  .toolbar input,.toolbar select{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:9px 14px;color:var(--ink);font-size:14px;font-family:inherit;outline:none;min-height:40px;transition:var(--transition)}
+  .toolbar input:focus,.toolbar select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .toolbar input::placeholder{color:var(--ink-tertiary)}
+  .filter-row{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .chip{padding:6px 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--ink-secondary);font-size:13px;cursor:pointer;font-family:inherit;font-weight:500;transition:var(--transition)}
+  .chip:hover{border-color:var(--ink-tertiary);color:var(--ink)}
+  .chip.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  .list-item{display:flex;align-items:flex-start;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;transition:var(--transition);cursor:pointer;position:relative}
+  .list-item:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:var(--shadow)}
+  .list-item.done{background:var(--surface-elevated);opacity:0.75}
+  .list-item.done .item-title{text-decoration:line-through;color:var(--ink-tertiary)}
+  .list-item.cancelled{opacity:0.55;border-style:dashed}
+  .list-item.cancelled::after{content:'AUSGEFALLEN';position:absolute;top:14px;right:18px;padding:3px 10px;border:1px solid rgba(184,74,74,0.25);border-radius:999px;color:var(--danger);font-size:10px;font-weight:600;letter-spacing:0.08em;font-family:'JetBrains Mono',monospace;transform:rotate(-6deg);background:var(--danger-soft)}
+  .item-check{width:22px;height:22px;border:2px solid var(--border);border-radius:50%;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:var(--transition)}
+  .item-check:hover{border-color:var(--accent)}
+  .item-check.checked{background:var(--accent);border-color:var(--accent);box-shadow:0 2px 6px rgba(184,92,72,0.3)}
+  .item-check.checked::after{content:'';width:5px;height:9px;border:solid white;border-width:0 2px 2px 0;transform:rotate(45deg) translateY(-1px)}
+  .item-body{flex:1;min-width:0}
+  .item-title{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:3px}
+  .item-meta{font-size:12px;color:var(--ink-tertiary);font-family:'JetBrains Mono',monospace}
+  .item-tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .tag{padding:3px 10px;border-radius:999px;background:var(--surface-hover);border:1px solid var(--border);font-size:11px;color:var(--ink-secondary);font-weight:500;font-family:'JetBrains Mono',monospace}
+  .tag.accent{background:var(--accent-soft);border-color:rgba(184,92,72,0.2);color:var(--accent)}
+  .tag.success{background:var(--success-soft);border-color:rgba(90,138,90,0.2);color:var(--success)}
+  .tag.danger{background:var(--danger-soft);border-color:rgba(184,74,74,0.2);color:var(--danger)}
+  .item-actions{display:flex;gap:6px;opacity:0;transition:opacity 0.15s ease}
+  .list-item:hover .item-actions{opacity:1}
+  .schedule-grid{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+  .schedule-grid::-webkit-scrollbar{height:6px}
+  .schedule-grid::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  .schedule-day{min-width:230px;flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;transition:var(--transition)}
+  .schedule-day:hover{box-shadow:var(--shadow)}
+  .schedule-day h4{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center}
+  .schedule-day h4 .day-date{font-size:11px;color:var(--ink-tertiary);font-weight:500;font-family:'JetBrains Mono',monospace}
+  .schedule-slot{background:var(--surface-elevated);margin-bottom:8px;padding:12px 14px;border-radius:var(--radius);font-size:13px;border-left:3px solid var(--accent);cursor:grab;transition:var(--transition);position:relative}
+  .schedule-slot:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+  .schedule-slot .slot-time{font-size:11px;color:var(--ink-tertiary);font-family:'JetBrains Mono',monospace;margin-bottom:2px}
+  .schedule-slot .slot-subject{font-weight:600}
+  .schedule-slot .slot-meta{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+  .schedule-empty{color:var(--ink-tertiary);font-size:12px;padding:12px 0;text-align:center}
+  .drop-target{border:1.5px dashed var(--border);border-radius:var(--radius);padding:10px;margin-top:4px;text-align:center;color:var(--ink-tertiary);font-size:12px;transition:var(--transition)}
+  .drop-target.active{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+  .week-slot{background:var(--surface-elevated);margin-bottom:8px;padding:12px 14px;border-radius:var(--radius);font-size:13px;border-left:3px solid var(--accent);cursor:pointer;transition:var(--transition);position:relative}
+  .week-slot:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm);border-left-color:var(--accent-hover)}
+  .week-slot.type-klausur{border-left-color:var(--danger)}
+  .week-slot.type-karteikarten{border-left-color:var(--success)}
+  .week-slot.type-frei{border-left-color:var(--ink-tertiary)}
+  .week-slot.slot-done{opacity:0.55}
+  .week-slot.slot-done .slot-label{text-decoration:line-through}
+  .week-slot .slot-shifted-badge{position:absolute;top:8px;right:8px;font-size:10px;color:var(--warning);font-weight:600}
+  .queue-item{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;cursor:grab;transition:var(--transition)}
+  .queue-item:hover{box-shadow:var(--shadow);border-color:var(--accent)}
+  .queue-item.active-item{border-color:var(--accent);background:var(--accent-soft)}
+  .queue-pos{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--ink-tertiary);width:28px;text-align:center;font-weight:600}
+  .queue-info{flex:1}
+  .queue-subject{font-size:15px;font-weight:600;color:var(--ink)}
+  .queue-units{font-size:12px;color:var(--ink-tertiary);font-family:'JetBrains Mono',monospace;margin-top:2px}
+  .queue-progress-outer{background:var(--border-light);border-radius:999px;height:6px;margin-top:10px;width:min(260px,100%);overflow:hidden}
+  .queue-progress-inner{height:6px;border-radius:999px;background:linear-gradient(90deg,var(--accent),#d4a08a);transition:width 0.5s cubic-bezier(0.4,0,0.2,1)}
+  .notes-layout{display:grid;grid-template-columns:300px 1fr;gap:20px;min-height:520px}
+  .notes-sidebar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column}
+  .notes-sidebar-header{padding:14px 18px;border-bottom:1px solid var(--border-light);font-size:12px;font-weight:600;text-transform:uppercase;color:var(--ink-tertiary);letter-spacing:0.06em}
+  .note-list-item{padding:14px 18px;border-bottom:1px solid var(--border-light);cursor:pointer;transition:var(--transition)}
+  .note-list-item:hover{background:var(--surface-hover)}
+  .note-list-item.active{background:var(--accent-soft);border-left:3px solid var(--accent);padding-left:15px}
+  .note-list-title{font-size:14px;font-weight:500;color:var(--ink)}
+  .note-list-date{font-size:11px;color:var(--ink-tertiary);margin-top:2px;font-family:'JetBrains Mono',monospace}
+  .note-editor{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);display:flex;flex-direction:column;overflow:hidden}
+  .note-editor-toolbar{padding:14px 20px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center}
+  .note-title-input{background:transparent;border:none;color:var(--ink);font-size:22px;font-weight:700;padding:20px 24px 8px;outline:none;width:100%;font-family:inherit;letter-spacing:-0.01em}
+  .note-title-input::placeholder{color:var(--ink-tertiary)}
+  .note-textarea{background:transparent;border:none;color:var(--ink);font-size:15px;padding:12px 24px 20px;outline:none;line-height:1.7;resize:vertical;min-height:320px;width:100%;font-family:inherit}
+  .note-textarea::placeholder{color:var(--ink-tertiary)}
+  .research-tags-bar{padding:10px 24px 16px;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--border-light);align-items:center}
+  .modal-bg{position:fixed;inset:0;background:rgba(31,28,26,0.5);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:100;padding:24px;opacity:0;pointer-events:none;transition:opacity 0.25s ease}
+  .modal-bg.show{opacity:1;pointer-events:all}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:28px 32px;width:560px;max-width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-xl);transform:translateY(12px) scale(0.98);transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1)}
+  .modal-bg.show .modal{transform:translateY(0) scale(1)}
+  .modal h2{font-size:20px;font-weight:700;margin-bottom:20px;color:var(--ink);letter-spacing:-0.01em}
+  .modal label{display:block;font-size:12px;color:var(--ink-tertiary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;margin-top:16px;font-weight:600}
+  .modal input,.modal select,.modal textarea{width:100%;background:var(--surface-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;color:var(--ink);font-size:14px;font-family:inherit;outline:none;transition:var(--transition)}
+  .modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .modal input[type="checkbox"]{width:auto}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:28px}
+  .modal .checkbox-label{display:flex;align-items:center;gap:10px;margin-top:12px;cursor:pointer;font-size:14px;color:var(--ink-secondary);text-transform:none;letter-spacing:normal;font-weight:400}
+  .guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:24px}
+  .guide-step{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;transition:var(--transition)}
+  .guide-step:hover{box-shadow:var(--shadow);border-color:var(--accent)}
+  .guide-step strong{display:block;margin-bottom:6px;color:var(--accent);font-size:14px}
+  .guide-step small{color:var(--ink-secondary);line-height:1.5;font-size:13px}
+  .empty-state{text-align:center;padding:48px 20px;color:var(--ink-tertiary)}
+  .empty-state-icon{font-size:40px;margin-bottom:12px;opacity:0.5}
+  #toast{position:fixed;bottom:28px;right:28px;background:var(--ink);color:white;border-radius:var(--radius);padding:12px 20px;z-index:200;font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);transform:translateY(20px);opacity:0;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none}
+  #toast.show{transform:translateY(0);opacity:1}
+  .section{display:none;animation:fadeIn 0.3s ease}
+  .section.active{display:block}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .import-drop{border:2px dashed var(--border);border-radius:var(--radius-lg);padding:32px;text-align:center;color:var(--ink-tertiary);cursor:pointer;margin-top:16px;transition:var(--transition);background:var(--surface-elevated)}
+  .import-drop:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .detail-row{margin-bottom:16px}
+  .detail-label{color:var(--ink-tertiary);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+  .detail-value{font-size:15px;color:var(--ink)}
+  .detail-box{background:var(--surface-elevated);padding:14px;border-radius:var(--radius);border:1px solid var(--border-light);font-size:14px;line-height:1.6}
+  @media(max-width:920px){.app{grid-template-columns:1fr}.sidebar{display:none}.mobile-nav{display:flex!important;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:8px;z-index:100;justify-content:space-around}.content{padding:20px 16px 80px}.notes-layout{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr}.topbar{padding:16px}}
+  @media(min-width:921px){.mobile-nav{display:none!important}}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--ink-tertiary)}
+  .text-muted{color:var(--ink-tertiary)}.text-accent{color:var(--accent)}.text-success{color:var(--success)}.text-danger{color:var(--danger)}
+  .mb-4{margin-bottom:16px}.mt-4{margin-top:16px}.flex{display:flex}.items-center{align-items:center}.gap-2{gap:8px}.gap-3{gap:12px}.justify-between{justify-content:space-between}
 </style>
+<base target="_blank">
 </head>
 <body>
-<div class="page-bg">
-  <div class="paper-shell">
-    <header>
-      <div class="header-left">
-        <h1>StudyDesk</h1>
-        <span id="date-display"></span>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">S</div>
+      <div><div class="brand-text">StudyDesk</div><div class="brand-sub">Studienplaner</div></div>
+    </div>
+    <nav class="nav-group">
+      <button class="nav-item active" data-section="dashboard" onclick="setActiveSection('dashboard')"><span class="nav-icon">📊</span>Übersicht</button>
+      <button class="nav-item" data-section="lectures" onclick="setActiveSection('lectures')"><span class="nav-icon">📚</span>Vorlesungen</button>
+      <button class="nav-item" data-section="schedule" onclick="setActiveSection('schedule')"><span class="nav-icon">🗓️</span>Stundenplan</button>
+      <button class="nav-item" data-section="lernplan" onclick="setActiveSection('lernplan')"><span class="nav-icon">🎯</span>Lernplan</button>
+      <button class="nav-item" data-section="notes" onclick="setActiveSection('notes')"><span class="nav-icon">📝</span>Notizen</button>
+      <button class="nav-item" data-section="todos" onclick="setActiveSection('todos')"><span class="nav-icon">✅</span>Aufgaben</button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn btn-icon small" onclick="exportData()" title="Exportieren">⬇</button>
+      <button class="btn btn-icon small" onclick="openImportModal()" title="Importieren">⬆</button>
+    </div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title" id="page-title">Übersicht</h1>
+        <span class="date-chip" id="date-display"></span>
       </div>
-      <div class="header-actions">
-        <button class="btn small" onclick="exportData()" title="Daten exportieren">⬇ Export</button>
-        <button class="btn small" onclick="openImportModal()" title="Daten importieren">⬆ Import</button>
+      <div class="topbar-actions">
+        <button class="btn primary" id="topbar-action-btn" onclick="triggerTopAction()">+ Neu</button>
       </div>
     </header>
-    <nav class="nav">
-      <button class="nav-btn active" data-section="dashboard">Übersicht</button>
-      <button class="nav-btn" data-section="lectures">Vorlesungen</button>
-      <button class="nav-btn" data-section="schedule">Stundenplan</button>
-      <button class="nav-btn" data-section="lernplan">Lernplan</button>
-      <button class="nav-btn" data-section="notes">Notizen</button>
-      <button class="nav-btn" data-section="todos">Aufgaben</button>
-    </nav>
-    <div class="main">
-  <div class="section active" id="sec-dashboard">
-    <div class="panel-card">
-      <div class="panel-title">Aktenübersicht</div>
-      <div class="dash-grid">
-        <div class="stat-card"><div class="label">Vorlesungen</div><div class="val" id="dash-total">0</div><div class="sub" id="dash-done-text">0 nachgeholt</div><div class="progress-bar-outer"><div class="progress-bar-inner" id="dash-prog"></div></div></div>
-        <div class="stat-card"><div class="label">Offene Aufgaben</div><div class="val" id="dash-tasks">0</div><div class="sub" id="dash-done-tasks">0 erledigt</div></div>
-        <div class="stat-card"><div class="label">Notizen</div><div class="val" id="dash-notes">0</div><div class="sub" id="dash-research">0 Recherche-Tags</div></div>
+    <div class="content">
+      <div class="section active" id="sec-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Vorlesungen</div>
+            <div class="stat-value" id="dash-total">0</div>
+            <div class="stat-sub" id="dash-done-text">0 nachgeholt</div>
+            <div class="progress-track"><div class="progress-fill" id="dash-prog" style="width:0%"></div></div>
+          </div>
+          <div class="stat-card success">
+            <div class="stat-label">Offene Aufgaben</div>
+            <div class="stat-value" id="dash-tasks">0</div>
+            <div class="stat-sub" id="dash-done-tasks">0 erledigt</div>
+          </div>
+          <div class="stat-card info">
+            <div class="stat-label">Notizen</div>
+            <div class="stat-value" id="dash-notes">0</div>
+            <div class="stat-sub" id="dash-research">0 Recherche-Tags</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Offene Vorlesungen</div></div>
+          <div id="dash-next-list"></div>
+        </div>
+        <div class="card mt-4">
+          <div class="card-header"><div class="card-title">Offene Aufgaben</div></div>
+          <div id="dash-todos-list"></div>
+        </div>
+      </div>
+      <div class="section" id="sec-lectures">
+        <div class="toolbar">
+          <input type="text" id="lec-search" placeholder="Vorlesung suchen…" oninput="renderLectures()">
+          <select id="lec-filter-subject" onchange="renderLectures()"><option value="">Alle Rechtsgebiete</option></select>
+          <button class="btn primary" onclick="openLecModal()">+ Vorlesung</button>
+        </div>
+        <div class="filter-row">
+          <button class="chip active" data-lf="all" onclick="setLecFilter(this,'all')">Alle</button>
+          <button class="chip" data-lf="todo" onclick="setLecFilter(this,'todo')">Offen</button>
+          <button class="chip" data-lf="done" onclick="setLecFilter(this,'done')">Erledigt</button>
+          <button class="chip" data-lf="prio" onclick="setLecFilter(this,'prio')">Priorität</button>
+          <button class="chip" data-lf="cancelled" onclick="setLecFilter(this,'cancelled')">Ausgefallen</button>
+        </div>
+        <div id="lecture-list"></div>
+      </div>
+      <div class="section" id="sec-schedule">
+        <div class="toolbar">
+          <button class="btn primary" onclick="openScheduleModal()">➕ Termin hinzufügen</button>
+          <span class="text-muted" style="font-size:13px;">Ziehe Einträge in einen anderen Wochentag.</span>
+        </div>
+        <div id="schedule-container" class="schedule-grid"></div>
+        <div class="mt-4 flex items-center gap-3">
+          <button class="btn" onclick="generatePastLecturesFromSchedule()">📅 Verpasste Vorlesungen generieren</button>
+          <span class="text-muted" style="font-size:13px;">Erstellt fehlende Vorlesungen basierend auf den Zeiträumen</span>
+        </div>
+      </div>
+      <div class="section" id="sec-lernplan">
+        <div class="filter-row">
+          <button class="chip active" data-lp="queue" onclick="setLernplanTab(this,'queue')">📚 Rechtsgebiets-Warteschlange</button>
+          <button class="chip" data-lp="week" onclick="setLernplanTab(this,'week')">🗓️ Wochenplan</button>
+        </div>
+        <div class="guide-grid">
+          <div class="guide-step"><strong>1. Rechtsgebiete anlegen</strong><small>Füge deine Fächer zur Warteschlange hinzu und definiere, wie oft du sie nacharbeiten möchtest.</small></div>
+          <div class="guide-step"><strong>2. Wochenvorlage setzen</strong><small>Lege wiederkehrende Zeitslots fest. Platzhalter für Rechtsgebiete werden automatisch gefüllt.</small></div>
+          <div class="guide-step"><strong>3. Wochenplan abarbeiten</strong><small>Markiere erledigte Slots. Nicht geschaffte Termine kannst du mit einem Klick verschieben.</small></div>
+        </div>
+        <div id="lp-queue-view">
+          <div class="toolbar">
+            <button class="btn primary" onclick="openSubjectQueueModal()">+ Rechtsgebiet hinzufügen</button>
+            <span class="text-muted" style="font-size:13px;">Die ersten beiden offenen Gebiete werden abwechselnd in den Plan eingetragen.</span>
+          </div>
+          <div id="subject-queue-list"></div>
+        </div>
+        <div id="lp-week-view" style="display:none;">
+          <div class="toolbar">
+            <button class="btn" onclick="setupWeekPlanTemplate()">⚙ Vorlage bearbeiten</button>
+            <button class="btn" onclick="shiftWeekView(-1)">‹ Vorherige</button>
+            <span id="week-range-label" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent);font-weight:600;"></span>
+            <button class="btn" onclick="shiftWeekView(1)">Nächste ›</button>
+            <button class="btn small" onclick="jumpToTodayWeek()">Heute</button>
+          </div>
+          <div id="week-calendar" class="schedule-grid"></div>
+        </div>
+      </div>
+      <div class="section" id="sec-notes">
+        <div class="toolbar">
+          <button class="btn primary" onclick="newNote()">+ Neue Notiz</button>
+          <input type="text" id="note-search" placeholder="Notizen durchsuchen…" oninput="filterNotes(this.value)" style="flex:1;max-width:320px;">
+        </div>
+        <div class="notes-layout">
+          <div class="notes-sidebar">
+            <div class="notes-sidebar-header">Notizen</div>
+            <div id="notes-list" style="overflow-y:auto;flex:1;"></div>
+          </div>
+          <div class="note-editor" id="note-editor">
+            <div class="note-editor-toolbar"><span class="text-muted" style="font-size:12px;">Notiz auswählen oder neu erstellen</span></div>
+            <div id="note-content-area" style="display:none;flex-direction:column;flex:1;">
+              <input class="note-title-input" id="note-title" placeholder="Titel der Notiz…" oninput="saveNoteDebounced()">
+              <textarea class="note-textarea" id="note-body" placeholder="Notizen, Fragen, Gedanken…&#10;&#10;Nutze #Tag um Recherche-Themen zu markieren…" oninput="saveNoteDebounced();extractTagsFromBody();"></textarea>
+              <div class="research-tags-bar">
+                <span class="text-muted" style="font-size:12px;font-weight:600;">Recherche:</span>
+                <div id="research-tags-list" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+              </div>
+              <div style="padding:12px 24px;border-top:1px solid var(--border-light);display:flex;gap:8px;justify-content:flex-end;align-items:center;">
+                <span class="text-muted" style="font-size:12px;" id="note-saved-hint"></span>
+                <button class="btn small danger" onclick="deleteCurrentNote()">Löschen</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="section" id="sec-todos">
+        <div class="toolbar">
+          <input type="text" id="todo-input" placeholder="Neue Aufgabe…" onkeydown="if(event.key==='Enter')addTodo()" style="flex:1;max-width:360px;">
+          <select id="todo-subject"></select>
+          <select id="todo-prio"><option value="normal">Normal</option><option value="high">Hoch</option></select>
+          <button class="btn primary" onclick="addTodo()">+ Aufgabe</button>
+        </div>
+        <div class="filter-row">
+          <button class="chip active" data-tf="all" onclick="setTodoFilter(this,'all')">Alle</button>
+          <button class="chip" data-tf="open" onclick="setTodoFilter(this,'open')">Offen</button>
+          <button class="chip" data-tf="done" onclick="setTodoFilter(this,'done')">Erledigt</button>
+        </div>
+        <div id="todo-list"></div>
       </div>
     </div>
-    <div class="panel-card">
-      <div class="panel-title">Offene Vorlesungen</div>
-      <div id="dash-next-list"></div>
-    </div>
-    <div class="panel-card">
-      <div class="panel-title">Offene Aufgaben</div>
-      <div id="dash-todos-list"></div>
-    </div>
-  </div>
-  <div class="section" id="sec-lectures">
-    <div class="toolbar">
-      <input type="text" id="lec-search" placeholder="Vorlesung suchen…" oninput="renderLectures()">
-      <select id="lec-filter-subject" onchange="renderLectures()"><option value="">Alle Rechtsgebiete</option></select>
-      <button class="btn primary" onclick="openLecModal()">+ Vorlesung</button>
-    </div>
-    <div class="filter-row">
-      <button class="filter-btn active" data-lf="all" onclick="setLecFilter(this,'all')">Alle</button>
-      <button class="filter-btn" data-lf="todo" onclick="setLecFilter(this,'todo')">Offen</button>
-      <button class="filter-btn" data-lf="done" onclick="setLecFilter(this,'done')">Erledigt</button>
-      <button class="filter-btn" data-lf="prio" onclick="setLecFilter(this,'prio')">Priorität</button>
-      <button class="filter-btn" data-lf="cancelled" onclick="setLecFilter(this,'cancelled')">Ausgefallen</button>
-    </div>
-    <div id="lecture-list"></div>
-  </div>
-  <div class="section" id="sec-schedule">
-    <div class="toolbar"><button class="btn primary" onclick="openScheduleModal()">➕ Termin zum Stundenplan hinzufügen</button><span style="font-size:12px; color:var(--ink-2);">Ziehe Einträge einfach in einen anderen Wochentag.</span></div>
-    <div id="schedule-container" class="schedule-grid"></div>
-    <div style="margin-top:24px;"><button class="btn" onclick="generatePastLecturesFromSchedule()">📅 Verpasste Vorlesungen generieren (innerhalb Zeiträume)</button><span style="margin-left:12px; font-size:12px; color:var(--ink-2);">Erstellt fehlende Vorlesungen basierend auf den Zeiträumen</span></div>
-  </div>
-  <div class="section" id="sec-lernplan">
-  <div class="filter-row">
-    <button class="filter-btn active" data-lp="queue" onclick="setLernplanTab(this,'queue')">📚 Rechtsgebietsplan</button>
-    <button class="filter-btn" data-lp="week" onclick="setLernplanTab(this,'week')">🗓️ Wochenplan</button>
-  </div>
-  <div class="lernplan-guide">
-    <div class="guide-step"><strong>1. Rechtsgebiete anlegen</strong><small>Füge deine Fachgebiete ein und ordne sie per Drag & Drop neu, damit der Lernplan abwechslungsreich bleibt.</small></div>
-    <div class="guide-step"><strong>2. Wochenvorlage setzen</strong><small>Definiere die wiederkehrenden Zeitslots und lege den Rhythmus für den Wochenplan fest.</small></div>
-    <div class="guide-step"><strong>3. Slots bearbeiten</strong><small>Ein Klick auf einen Termin öffnet den Detail-Editor, mit dem du Termine verschieben oder als erledigt markieren kannst.</small></div>
-  </div>
-
-  <!-- ── Rechtsgebietsplan (Queue) ── -->
-  <div id="lp-queue-view">
-    <div class="toolbar">
-      <button class="btn primary" onclick="openSubjectQueueModal()">+ Rechtsgebiet zur Warteschlange</button>
-      <span style="font-size:12px; color:var(--ink-2);">Die ersten beiden Gebiete werden im Wochenplan abwechselnd besetzt.</span>
-    </div>
-    <div id="subject-queue-list"></div>
-  </div>
-
-  <!-- ── Wochenplan (Kalender) ── -->
-  <div id="lp-week-view" style="display:none;">
-    <div class="toolbar">
-      <button class="btn" onclick="setupWeekPlanTemplate()">⚙ Vorlage konfigurieren</button>
-      <button class="btn" onclick="shiftWeekView(-1)">‹ Vorherige Woche</button>
-      <span id="week-range-label" style="font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--accent);"></span>
-      <button class="btn" onclick="shiftWeekView(1)">Nächste Woche ›</button>
-      <button class="btn small" onclick="jumpToTodayWeek()">Heute</button>
-    </div>
-    <div id="week-calendar" class="schedule-grid"></div>
   </div>
 </div>
-  <div class="section" id="sec-notes"><div style="display:flex; gap:10px; margin-bottom:16px;"><button class="btn primary" onclick="newNote()">+ Neue Notiz</button><input type="text" id="note-search" placeholder="Notizen durchsuchen…" oninput="filterNotes(this.value)" style="background:rgba(255,255,255,0.72);border:1px solid var(--line-2);border-radius:10px;padding:8px 14px;color:var(--ink);flex:1;"></div><div class="notes-layout"><div class="notes-sidebar"><div class="notes-sidebar-header">Notizen</div><div id="notes-list" style="overflow-y:auto; flex:1;"></div></div><div class="note-editor" id="note-editor"><div class="note-editor-toolbar" style="padding:12px 20px; border-bottom:1px solid var(--line-2);"><span style="font-size:12px;color:var(--ink-2);">Notiz auswählen oder neu erstellen</span></div><div id="note-content-area" style="display:none; flex-direction:column;"><input class="note-title-input" id="note-title" placeholder="Titel der Notiz…" oninput="saveNoteDebounced()"><textarea class="note-textarea" id="note-body" placeholder="Notizen, Fragen, Gedanken…&#10;&#10;Nutze #Tag um Recherche-Themen zu markieren…" oninput="saveNoteDebounced(); extractTagsFromBody();"></textarea><div class="research-tags" id="research-tags-area"><span style="font-size:11px;color:var(--ink-2);">recherche:</span><div id="research-tags-list" style="display:flex; gap:6px; flex-wrap:wrap;"></div></div><div style="padding:10px 24px; border-top:1px solid var(--line-2); display:flex; gap:8px; justify-content:flex-end;"><button class="btn small danger" onclick="deleteCurrentNote()">Löschen</button><span style="font-size:11px;color:var(--ink-2);" id="note-saved-hint"></span></div></div></div></div></div>
-  <div class="section" id="sec-todos"><div class="toolbar"><input type="text" id="todo-input" placeholder="Neue Aufgabe…" onkeydown="if(event.key==='Enter')addTodo()"><select id="todo-subject"></select><select id="todo-prio"><option value="normal">Normal</option><option value="high">Hoch</option></select><button class="btn primary" onclick="addTodo()">+ Aufgabe</button></div><div class="filter-row"><button class="filter-btn active" data-tf="all" onclick="setTodoFilter(this,'all')">Alle</button><button class="filter-btn" data-tf="open" onclick="setTodoFilter(this,'open')">Offen</button><button class="filter-btn" data-tf="done" onclick="setTodoFilter(this,'done')">Erledigt</button></div><div id="todo-list"></div></div>
+<div class="mobile-nav">
+  <button class="nav-item active" data-section="dashboard" onclick="setActiveSection('dashboard')">📊</button>
+  <button class="nav-item" data-section="lectures" onclick="setActiveSection('lectures')">📚</button>
+  <button class="nav-item" data-section="schedule" onclick="setActiveSection('schedule')">🗓️</button>
+  <button class="nav-item" data-section="lernplan" onclick="setActiveSection('lernplan')">🎯</button>
+  <button class="nav-item" data-section="notes" onclick="setActiveSection('notes')">📝</button>
+  <button class="nav-item" data-section="todos" onclick="setActiveSection('todos')">✅</button>
+</div>
+<div class="modal-bg" id="lec-modal">
+  <div class="modal">
+    <h2 id="lec-modal-title">Vorlesung hinzufügen</h2>
+    <label>Rechtsgebiet / Fach</label>
+    <input type="text" id="lec-m-subject" list="subject-datalist" autocomplete="off" placeholder="z.B. BGB AT">
+    <datalist id="subject-datalist"></datalist>
+    <label>Datum</label>
+    <input type="date" id="lec-m-date">
+    <label>Link</label>
+    <input type="text" id="lec-m-link" placeholder="https://…">
+    <label>Notiz</label>
+    <textarea id="lec-m-note" rows="2" placeholder="Interne Notiz…"></textarea>
+    <label class="checkbox-label"><input type="checkbox" id="lec-m-prio"> ⭐ Als Priorität markieren</label>
+    <label class="checkbox-label"><input type="checkbox" id="lec-m-cancelled"> 🚫 Als ausgefallen markieren</label>
+    <div class="modal-actions"><button class="btn" onclick="closeLecModal()">Abbrechen</button><button class="btn primary" onclick="saveLec()">Speichern</button></div>
+  </div>
+</div>
+<div class="modal-bg" id="detail-modal">
+  <div class="modal">
+    <h2 id="detail-title">📘 Details</h2>
+    <div id="detail-content"></div>
+    <div class="modal-actions" id="detail-modal-actions"><button class="btn" onclick="closeDetailModal()">Schließen</button></div>
+  </div>
+</div>
+<div class="modal-bg" id="schedule-modal">
+  <div class="modal">
+    <h2>Stundenplan – Regelmäßiger Termin</h2>
+    <label>Rechtsgebiet</label>
+    <input type="text" id="sched-subject" placeholder="z.B. BGB AT">
+    <label>Wochentag</label>
+    <select id="sched-day"><option>Montag</option><option>Dienstag</option><option>Mittwoch</option><option>Donnerstag</option><option>Freitag</option><option>Samstag</option><option>Sonntag</option></select>
+    <label>Zeitraum (Start – Ende)</label>
+    <div class="flex items-center gap-2"><input type="date" id="sched-start"><span class="text-muted">bis</span><input type="date" id="sched-end"></div>
+    <label>Uhrzeit (optional)</label>
+    <input type="text" id="sched-time" placeholder="10:00 – 12:00">
+    <div class="modal-actions"><button class="btn" onclick="closeScheduleModal()">Abbrechen</button><button class="btn primary" onclick="saveScheduleEntry()">Speichern</button></div>
+  </div>
+</div>
+<div class="modal-bg" id="subject-queue-modal">
+  <div class="modal">
+    <h2 id="sq-modal-title">Rechtsgebiet zur Warteschlange</h2>
+    <label>Rechtsgebiet</label>
+    <input type="text" id="sq-subject" list="subject-datalist" autocomplete="off" placeholder="z.B. Strafrecht AT">
+    <label>Anzahl Einheiten</label>
+    <input type="number" id="sq-units" min="1" value="1">
+    <div class="modal-actions"><button class="btn" onclick="closeSubjectQueueModal()">Abbrechen</button><button class="btn primary" onclick="saveSubjectQueueEntry()">Speichern</button></div>
+  </div>
+</div>
+<div class="modal-bg" id="weekplan-template-modal">
+  <div class="modal" style="width:680px;">
+    <h2>Wochenplan-Vorlage</h2>
+    <p class="text-muted" style="font-size:13px;margin-bottom:16px;">Definiere wiederkehrende Zeitslots pro Wochentag. Platzhalter für Rechtsgebiete werden automatisch aus der Warteschlange gefüllt.</p>
+    <div class="toolbar" style="margin-bottom:12px;">
+      <select id="wpt-day"><option>Montag</option><option>Dienstag</option><option>Mittwoch</option><option>Donnerstag</option><option>Freitag</option><option>Samstag</option><option>Sonntag</option></select>
+      <input type="text" id="wpt-time" placeholder="08:00 – 10:00" style="width:140px;">
+      <select id="wpt-type"><option value="rechtsgebiet">Rechtsgebiet nacharbeiten</option><option value="klausur">Klausur schreiben</option><option value="karteikarten">Karteikarten lernen</option><option value="frei">Frei / Sonstiges</option></select>
+      <input type="text" id="wpt-label" placeholder="Bezeichnung (bei Frei)" style="width:180px;">
+      <button class="btn primary" onclick="addWeekPlanTemplateSlot()">+ Hinzufügen</button>
+    </div>
+    <div id="wpt-list" style="max-height:340px;overflow-y:auto;"></div>
+    <div class="modal-actions"><button class="btn" onclick="closeWeekPlanTemplateModal()">Schließen</button><button class="btn primary" onclick="regenerateFromTemplate()">Kalender neu füllen</button></div>
+  </div>
+</div>
+<div class="modal-bg" id="slot-detail-modal">
+  <div class="modal">
+    <h2>Slot bearbeiten</h2>
+    <div id="slot-detail-info" style="font-size:12px;color:var(--ink-tertiary);margin-bottom:12px;font-family:'JetBrains Mono',monospace;"></div>
+    <label>Uhrzeit</label>
+    <input type="text" id="slot-m-time">
+    <label>Typ</label>
+    <select id="slot-m-type" onchange="toggleSlotLabelField()"><option value="rechtsgebiet">Rechtsgebiet nacharbeiten</option><option value="klausur">Klausur schreiben</option><option value="karteikarten">Karteikarten lernen</option><option value="frei">Frei / Sonstiges</option></select>
+    <label id="slot-m-label-wrap">Bezeichnung</label>
+    <input type="text" id="slot-m-label">
+    <label class="checkbox-label"><input type="checkbox" id="slot-m-done"> ✅ Als erledigt markieren</label>
+    <div class="modal-actions" style="justify-content:space-between;">
+      <button class="btn danger" onclick="markSlotNotDoneAndShift()">↷ Nicht geschafft – verschieben</button>
+      <div class="flex gap-2"><button class="btn" onclick="closeSlotDetailModal()">Abbrechen</button><button class="btn primary" onclick="saveSlotDetail()">Speichern</button></div>
     </div>
   </div>
 </div>
-
-<!-- Lecture Modal -->
-<div class="modal-bg hidden" id="lec-modal"><div class="modal"><h2 id="lec-modal-title">Vorlesung hinzufügen/bearbeiten</h2><label>Rechtsgebiet / Fach</label><input type="text" id="lec-m-subject" list="subject-datalist" autocomplete="off"><datalist id="subject-datalist"></datalist><label>Datum</label><input type="date" id="lec-m-date"><label>Link</label><input type="text" id="lec-m-link"><label>Notiz</label><textarea id="lec-m-note" rows="2"></textarea><label style="display:flex;align-items:center;gap:8px;margin-top:12px;"><input type="checkbox" id="lec-m-prio"> Priorität</label><label style="display:flex;align-items:center;gap:8px;margin-top:8px;"><input type="checkbox" id="lec-m-cancelled"> Als ausgefallen markieren</label><div class="modal-actions"><button class="btn" onclick="closeLecModal()">Abbrechen</button><button class="btn primary" onclick="saveLec()">Speichern</button></div></div></div>
-
-<!-- Detail Modal -->
-<div class="modal-bg hidden" id="detail-modal"><div class="modal"><h2 id="detail-title">📘 Vorlesungsdetails</h2><div id="detail-content"></div><div class="modal-actions" id="detail-modal-actions"><button class="btn" onclick="closeDetailModal()">Schließen</button></div></div></div>
-
-<!-- Schedule Modal -->
-<div class="modal-bg hidden" id="schedule-modal"><div class="modal"><h2>Stundenplan – Regelmäßiger Termin</h2><label>Rechtsgebiet</label><input type="text" id="sched-subject" placeholder="z.B. BGB AT"><label>Wochentag</label><select id="sched-day"><option value="Montag">Montag</option><option value="Dienstag">Dienstag</option><option value="Mittwoch">Mittwoch</option><option value="Donnerstag">Donnerstag</option><option value="Freitag">Freitag</option><option value="Samstag">Samstag</option><option value="Sonntag">Sonntag</option></select><label>Zeitraum (Start - Ende)</label><div class="date-range"><input type="date" id="sched-start"><span style="color:var(--ink-2);">bis</span><input type="date" id="sched-end"></div><label>Uhrzeit (optional)</label><input type="text" id="sched-time" placeholder="10:00 - 12:00"><div class="modal-actions"><button class="btn" onclick="closeScheduleModal()">Abbrechen</button><button class="btn primary" onclick="saveScheduleEntry()">Speichern</button></div></div></div>
-<!-- Subject Queue Modal -->
-<div class="modal-bg hidden" id="subject-queue-modal"><div class="modal">
-  <h2 id="sq-modal-title">Rechtsgebiet zur Warteschlange hinzufügen</h2>
-  <label>Rechtsgebiet</label>
-  <input type="text" id="sq-subject" list="subject-datalist" autocomplete="off">
-  <label>Anzahl Einheiten</label>
-  <input type="number" id="sq-units" min="1" value="1">
-  <div class="modal-actions">
-    <button class="btn" onclick="closeSubjectQueueModal()">Abbrechen</button>
-    <button class="btn primary" onclick="saveSubjectQueueEntry()">Speichern</button>
-  </div>
-</div></div>
-
-<!-- Week Plan Template Modal -->
-<div class="modal-bg hidden" id="weekplan-template-modal"><div class="modal" style="width:640px;">
-  <h2>Wochenplan-Vorlage konfigurieren</h2>
-  <p style="color:var(--ink-2); font-size:13px; margin-bottom:12px;">Definiere wiederkehrende Zeitslots pro Wochentag. Diese Vorlage wird verwendet, wenn du im Kalender in neue Wochen scrollst.</p>
-  <div class="toolbar" style="margin-bottom:10px;">
-    <select id="wpt-day">
-      <option value="Montag">Montag</option><option value="Dienstag">Dienstag</option><option value="Mittwoch">Mittwoch</option>
-      <option value="Donnerstag">Donnerstag</option><option value="Freitag">Freitag</option><option value="Samstag">Samstag</option><option value="Sonntag">Sonntag</option>
-    </select>
-    <input type="text" id="wpt-time" placeholder="z.B. 08:00 - 10:00" style="width:140px;">
-    <select id="wpt-type">
-      <option value="rechtsgebiet">Rechtsgebiet nacharbeiten</option>
-      <option value="klausur">Klausur schreiben</option>
-      <option value="karteikarten">Karteikarten lernen</option>
-      <option value="frei">Frei / Sonstiges</option>
-    </select>
-    <input type="text" id="wpt-label" placeholder="Bezeichnung (bei 'Frei/Sonstiges')" style="width:180px;">
-    <button class="btn primary" onclick="addWeekPlanTemplateSlot()">+ Hinzufügen</button>
-  </div>
-  <div id="wpt-list" style="max-height:320px; overflow-y:auto;"></div>
-  <div class="modal-actions">
-    <button class="btn" onclick="closeWeekPlanTemplateModal()">Schließen</button>
-    <button class="btn primary" onclick="regenerateFromTemplate()">Kalender neu aus Vorlage füllen</button>
-  </div>
-</div></div>
-
-<!-- Day Slot Detail/Edit Modal -->
-<div class="modal-bg hidden" id="slot-detail-modal"><div class="modal">
-  <h2>Slot bearbeiten</h2>
-  <div id="slot-detail-info" style="font-size:12px; color:var(--ink-2); margin-bottom:10px; font-family:'IBM Plex Mono', monospace;"></div>
-  <label>Uhrzeit</label>
-  <input type="text" id="slot-m-time">
-  <label>Typ</label>
-  <select id="slot-m-type" onchange="toggleSlotLabelField()">
-    <option value="rechtsgebiet">Rechtsgebiet nacharbeiten</option>
-    <option value="klausur">Klausur schreiben</option>
-    <option value="karteikarten">Karteikarten lernen</option>
-    <option value="frei">Frei / Sonstiges</option>
-  </select>
-  <label id="slot-m-label-wrap">Bezeichnung</label>
-  <input type="text" id="slot-m-label">
-  <label style="display:flex;align-items:center;gap:8px;margin-top:12px;">
-    <input type="checkbox" id="slot-m-done"> Erledigt
-  </label>
-  <div class="modal-actions" style="justify-content:space-between;">
-    <button class="btn danger" onclick="markSlotNotDoneAndShift()">↷ Nicht geschafft → verschieben</button>
-    <div style="display:flex; gap:10px;">
-      <button class="btn" onclick="closeSlotDetailModal()">Abbrechen</button>
-      <button class="btn primary" onclick="saveSlotDetail()">Speichern</button>
-    </div>
-  </div>
-</div></div>
-<!-- Import Modal -->
-<div class="modal-bg hidden" id="import-modal">
+<div class="modal-bg" id="import-modal">
   <div class="modal">
     <h2>⬆ Daten importieren</h2>
-    <p style="color:var(--ink-2); font-size:14px; margin-bottom:8px;">Achtung: Der Import überschreibt alle aktuellen Daten. Exportiere zuerst eine Sicherung, falls nötig.</p>
+    <p class="text-muted" style="font-size:14px;margin-bottom:8px;">Achtung: Der Import überschreibt alle aktuellen Daten. Exportiere zuerst eine Sicherung.</p>
     <div class="import-drop" id="import-drop" onclick="document.getElementById('import-file-input').click()">
-      <div style="font-size:28px; margin-bottom:8px;">📂</div>
-      <div style="font-size:14px;">JSON-Datei hier ablegen oder klicken zum Auswählen</div>
+      <div style="font-size:32px;margin-bottom:8px;">📂</div>
+      <div style="font-size:14px;">JSON-Datei hier ablegen oder klicken</div>
     </div>
     <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="handleImportFile(this)">
     <div class="modal-actions"><button class="btn" onclick="closeImportModal()">Abbrechen</button></div>
   </div>
 </div>
-
 <div id="toast"></div>
+
 <script>
-let data = JSON.parse(localStorage.getItem('studydesk_pro') || '{"lectures":[],"schedule":[],"todos":[],"notes":[]}');
-if (!data.schedule) data.schedule = [];
-if (!data.notes) data.notes = [];
-if (!data.todos) data.todos = [];
-if (!data.lectures) data.lectures = [];
-// ── Lernplan Datenmodell ──────────────────────────────────────────
-if (!data.subjectQueue) data.subjectQueue = [];      // [{id, subject, units, remaining}]
-if (!data.weekPlanSlots) data.weekPlanSlots = [];     // Vorlagen-Slots: [{id, day, time, type, label}]
-if (!data.weekPlanDays) data.weekPlanDays = {};        // konkrete Tage: { "2026-08-01": [{id, time, type, label, subject, skipped}] }
-if (!data.weekPlanAnchor) data.weekPlanAnchor = null;  // Startdatum, ab dem der Wochenplan generiert wird
+let data=JSON.parse(localStorage.getItem('studydesk_v2')||'{"lectures":[],"schedule":[],"todos":[],"notes":[],"subjectQueue":[],"weekPlanSlots":[],"weekPlanDays":{},"weekPlanAnchor":null}');
+if(!data.schedule)data.schedule=[];if(!data.notes)data.notes=[];if(!data.todos)data.todos=[];if(!data.lectures)data.lectures=[];
+if(!data.subjectQueue)data.subjectQueue=[];if(!data.weekPlanSlots)data.weekPlanSlots=[];if(!data.weekPlanDays)data.weekPlanDays={};if(!data.weekPlanAnchor)data.weekPlanAnchor=null;
+let currentWeekStart=null,lernplanSubjectEditId=null,lastAlternatingSubjectId=null;
+let currentNote=null,lecEditId=null,lecFilter='all',todoFilter='all',noteFilter='',saveTimer=null;
+let currentDetailId=null,currentDetailType=null,draggedQueueId=null;
+const TYPE_LABELS={rechtsgebiet:'Rechtsgebiet nacharbeiten',klausur:'Klausur schreiben',karteikarten:'Karteikarten lernen',frei:'Frei / Sonstiges'};
+const WEEKDAY_NAMES=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+const SECTION_TITLES={dashboard:'Übersicht',lectures:'Vorlesungen',schedule:'Stundenplan',lernplan:'Lernplan',notes:'Notizen',todos:'Aufgaben'};
+const SECTION_ACTIONS={dashboard:null,lectures:'openLecModal',schedule:'openScheduleModal',lernplan:'openSubjectQueueModal',notes:'newNote',todos:'addTodo'};
 
-let currentWeekStart = null; // Montag der aktuell angezeigten Woche (Date-Objekt)
-let lernplanSubjectEditId = null;
-let lastAlternatingSubjectId = null;
+function saveToLocal(){localStorage.setItem('studydesk_v2',JSON.stringify(data));updateDash();}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+function escapeHtml(str){if(!str)return'';return str.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function fmtDate(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return`${y}-${m}-${day}`;}
+function getMonday(d){const date=new Date(d);const day=date.getDay();const diff=(day===0?-6:1-day);date.setDate(date.getDate()+diff);date.setHours(0,0,0,0);return date;}
+function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
 
-let currentNote = null, lecEditId = null, lecFilter = 'all', todoFilter = 'all', noteFilter = '', saveTimer = null;
-let currentDetailId = null, currentDetailType = null;
+function openModal(id){document.getElementById(id).classList.add('show');}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
 
-function saveToLocal() { localStorage.setItem('studydesk_pro', JSON.stringify(data)); updateDash(); }
-function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
-function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>'"]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":"&#39;", '"':'&quot;' }[m])); }
-let draggedQueueId = null;
-
-function setActiveSection(section) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('sec-' + section).classList.add('active');
-  const targetBtn = document.querySelector(`.nav-btn[data-section="${section}"]`);
-  if (targetBtn) targetBtn.classList.add('active');
+function setActiveSection(section){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+section).classList.add('active');
+  document.querySelectorAll(`.nav-item[data-section="${section}"]`).forEach(b=>b.classList.add('active'));
+  document.getElementById('page-title').textContent=SECTION_TITLES[section];
+  const btn=document.getElementById('topbar-action-btn');
+  if(SECTION_ACTIONS[section]){btn.style.display='inline-flex';btn.onclick=new Function(SECTION_ACTIONS[section]+'()');
+    const labels={openLecModal:'+ Vorlesung',openScheduleModal:'+ Termin',openSubjectQueueModal:'+ Rechtsgebiet',newNote:'+ Notiz',addTodo:'+ Aufgabe'};
+    btn.textContent=labels[SECTION_ACTIONS[section]];
+  }else{btn.style.display='none';}
+  if(section==='lectures')renderLectures();
+  if(section==='schedule')renderSchedule();
+  if(section==='notes')renderNotesList();
+  if(section==='todos'){renderTodos();populateTodoSubject();}
+  if(section==='lernplan'){renderSubjectQueue();if(!currentWeekStart)currentWeekStart=getMonday(new Date());renderWeekCalendar();}
+  if(section==='dashboard')updateDash();
 }
+function updateDate(){document.getElementById('date-display').textContent=new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
+updateDate();
+function triggerTopAction(){const sec=document.querySelector('.section.active').id.replace('sec-','');const fn=SECTION_ACTIONS[sec];if(fn)new Function(fn+'()')();}
 
-// ── Export / Import ──────────────────────────────────────────────
-function exportData() {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const now = new Date();
-  const stamp = now.toISOString().slice(0,10);
-  a.href = url; a.download = `studydesk_${stamp}.json`;
-  a.click(); URL.revokeObjectURL(url);
-  toast('Export erfolgreich ✓');
+// ── Export / Import ──
+function exportData(){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`studydesk_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();URL.revokeObjectURL(url);toast('Export erfolgreich ✓');
 }
-function openImportModal() { document.getElementById('import-modal').classList.remove('hidden'); }
-function closeImportModal() { document.getElementById('import-modal').classList.add('hidden'); document.getElementById('import-file-input').value = ''; }
-function handleImportFile(input) {
-  const file = input.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const parsed = JSON.parse(e.target.result);
-      if(typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Ungültiges Format');
-      if(!confirm('Alle aktuellen Daten werden überschrieben. Fortfahren?')) return;
-      data = {
-        lectures: parsed.lectures || [],
-        schedule: parsed.schedule || [],
-        todos: parsed.todos || [],
-        notes: parsed.notes || [],
-        subjectQueue: parsed.subjectQueue || [],
-        weekPlanSlots: parsed.weekPlanSlots || [],
-        weekPlanDays: parsed.weekPlanDays || {},
-        weekPlanAnchor: parsed.weekPlanAnchor || null
-      };
-      saveToLocal(); renderLectures(); renderSchedule(); renderTodos(); renderNotesList(); updateDash();
-      closeImportModal(); toast('Import erfolgreich ✓');
-    } catch(err) { toast('Fehler: Ungültige JSON-Datei'); }
+function openImportModal(){openModal('import-modal');}
+function closeImportModal(){closeModal('import-modal');document.getElementById('import-file-input').value='';}
+function handleImportFile(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const parsed=JSON.parse(e.target.result);
+      if(typeof parsed!=='object'||Array.isArray(parsed))throw new Error('Ungültig');
+      if(!confirm('Alle aktuellen Daten werden überschrieben. Fortfahren?'))return;
+      data={lectures:parsed.lectures||[],schedule:parsed.schedule||[],todos:parsed.todos||[],notes:parsed.notes||[],
+        subjectQueue:parsed.subjectQueue||[],weekPlanSlots:parsed.weekPlanSlots||[],weekPlanDays:parsed.weekPlanDays||{},weekPlanAnchor:parsed.weekPlanAnchor||null};
+      saveToLocal();renderLectures();renderSchedule();renderTodos();renderNotesList();updateDash();
+      closeImportModal();toast('Import erfolgreich ✓');
+    }catch(err){toast('Fehler: Ungültige JSON-Datei');}
   };
   reader.readAsText(file);
 }
-// Drag & drop import
-document.addEventListener('DOMContentLoaded', () => {
-  const drop = document.getElementById('import-drop');
-  drop.addEventListener('dragover', e => { e.preventDefault(); drop.style.borderColor = 'var(--accent)'; });
-  drop.addEventListener('dragleave', () => { drop.style.borderColor = ''; });
-  drop.addEventListener('drop', e => {
-    e.preventDefault(); drop.style.borderColor = '';
-    const file = e.dataTransfer.files[0]; if(!file) return;
-    const fakeInput = { files: [file] }; handleImportFile(fakeInput);
+document.addEventListener('DOMContentLoaded',()=>{
+  const drop=document.getElementById('import-drop');
+  drop.addEventListener('dragover',e=>{e.preventDefault();drop.style.borderColor='var(--accent)';});
+  drop.addEventListener('dragleave',()=>{drop.style.borderColor='';});
+  drop.addEventListener('drop',e=>{e.preventDefault();drop.style.borderColor='';
+    const file=e.dataTransfer.files[0];if(!file)return;handleImportFile({files:[file]});
   });
 });
-document.addEventListener('DOMContentLoaded', function() {
-    generatePastLecturesFromSchedule()
-  });
 
-  
-// ── Nummerierung ─────────────────────────────────────────────────
-// Renumbering: only non-cancelled lectures count, sorted by date
-function renumberSubjectLectures(subject) {
-  const relevant = data.lectures
-    .filter(l => l.subject === subject && !l.cancelled)
-    .sort((a,b) => (a.date || '').localeCompare(b.date || ''));
-  relevant.forEach((lec, idx) => {
-    const newNum = idx + 1;
-    const datePart = lec.date ? ` (${lec.date})` : '';
-    lec.title = `${lec.subject} - ${newNum}${datePart}`;
-  });
-  // Update title for cancelled ones too (keep their label consistent)
-  data.lectures
-    .filter(l => l.subject === subject && l.cancelled)
-    .forEach(lec => {
-      const datePart = lec.date ? ` (${lec.date})` : '';
-      lec.title = `${lec.subject} - ausgefallen${datePart}`;
-    });
+// ── Dashboard ──
+function updateDash(){
+  const visibleLec=data.lectures.filter(l=>!l.cancelled);
+  const done=visibleLec.filter(l=>l.done).length;
+  document.getElementById('dash-total').innerText=visibleLec.length;
+  document.getElementById('dash-done-text').innerHTML=done+' nachgeholt';
+  const pct=visibleLec.length?(done/visibleLec.length)*100:0;
+  document.getElementById('dash-prog').style.width=pct+'%';
+  const openTodos=data.todos.filter(t=>!t.done).length;
+  const doneTodos=data.todos.filter(t=>t.done).length;
+  document.getElementById('dash-tasks').innerText=openTodos;
+  document.getElementById('dash-done-tasks').innerHTML=doneTodos+' erledigt';
+  document.getElementById('dash-notes').innerText=data.notes.length;
+  document.getElementById('dash-research').innerText=data.notes.flatMap(n=>n.tags||[]).length;
+  const pendingLec=visibleLec.filter(l=>!l.done).sort((a,b)=>(a.date||'').localeCompare(b.date||'')).slice(0,15);
+  document.getElementById('dash-next-list').innerHTML=pendingLec.length
+    ?pendingLec.map(l=>`<div class="list-item" onclick="showLectureDetail('${l.id}')" style="padding:10px 14px;margin-bottom:6px;"><div class="item-check ${l.done?'checked':''} ${l.prio?'accent':''}" style="margin-top:0;" onclick="event.stopPropagation();toggleLec('${l.id}')"></div><div class="item-body"><div class="item-title">${escapeHtml(l.title)}</div><div class="item-meta">${l.date||'kein Datum'}</div></div></div>`).join('')
+    :'<div class="empty-state"><div class="empty-state-icon">✅</div>Alle Vorlesungen nachgeholt</div>';
+  const allOpenTodos=data.todos.filter(t=>!t.done).slice(0,6);
+  document.getElementById('dash-todos-list').innerHTML=allOpenTodos.length
+    ?allOpenTodos.map(t=>`<div class="list-item" onclick="showTodoDetail('${t.id}')" style="padding:10px 14px;margin-bottom:6px;"><div class="item-check ${t.done?'checked':''} ${t.prio==='high'?'accent':''}" style="margin-top:0;" onclick="event.stopPropagation();toggleTodo('${t.id}')"></div><div class="item-body"><div class="item-title">${escapeHtml(t.text)}</div><div class="item-meta">${t.subject||'kein Fach'}</div></div></div>`).join('')
+    :'<div class="empty-state"><div class="empty-state-icon">✅</div>Keine offenen Aufgaben</div>';
 }
 
-function updateSubjectDatalist() {
-  const subjects = [...new Set(data.lectures.map(l => l.subject).filter(Boolean))];
-  const datalist = document.getElementById('subject-datalist');
-  if (datalist) datalist.innerHTML = subjects.map(s => `<option value="${escapeHtml(s)}">`).join('');
+// ── Lectures ──
+function renumberSubjectLectures(subject){
+  const relevant=data.lectures.filter(l=>l.subject===subject&&!l.cancelled).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  relevant.forEach((lec,idx)=>{const newNum=idx+1;const datePart=lec.date?` (${lec.date})`:'';lec.title=`${lec.subject} - ${newNum}${datePart}`;});
+  data.lectures.filter(l=>l.subject===subject&&l.cancelled).forEach(lec=>{const datePart=lec.date?` (${lec.date})`:'';lec.title=`${lec.subject} - ausgefallen${datePart}`;});
 }
-
-// ── Navigation ───────────────────────────────────────────────────
-document.querySelectorAll('.nav-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    const section = this.getAttribute('data-section');
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('sec-' + section).classList.add('active');
-    this.classList.add('active');
-    if(section === 'lectures') renderLectures();
-    if(section === 'schedule') renderSchedule();
-    if(section === 'notes') renderNotesList();
-    if(section === 'todos') { renderTodos(); populateTodoSubject(); }
-    if(section === 'lernplan') { renderSubjectQueue(); if(!currentWeekStart) currentWeekStart = getMonday(new Date()); renderWeekCalendar(); }
-    if(section === 'dashboard') updateDash();
-  });
-});
-function updateDate() { document.getElementById('date-display').textContent = new Date().toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long', year:'numeric'}); }
-updateDate();
-
-// ── Dashboard ────────────────────────────────────────────────────
-function updateDash() {
-  const visibleLec = data.lectures.filter(l => !l.cancelled);
-  const done = visibleLec.filter(l => l.done).length;
-  document.getElementById('dash-total').innerText = visibleLec.length;
-  document.getElementById('dash-done-text').innerHTML = done + ' nachgeholt';
-  const pct = visibleLec.length ? (done/visibleLec.length)*100 : 0;
-  document.getElementById('dash-prog').style.width = pct+'%';
-  const openTodos = data.todos.filter(t => !t.done).length;
-  const doneTodos = data.todos.filter(t => t.done).length;
-  document.getElementById('dash-tasks').innerText = openTodos;
-  document.getElementById('dash-done-tasks').innerHTML = doneTodos + ' erledigt';
-  document.getElementById('dash-notes').innerText = data.notes.length;
-  document.getElementById('dash-research').innerText = data.notes.flatMap(n => n.tags || []).length;
-
-  
-  const pendingLec = visibleLec
-    .filter(l => !l.done)
-    .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
-    .slice(0, 15);
-  document.getElementById('dash-next-list').innerHTML = pendingLec.length
-    ? pendingLec.map(l => `<div class="todo-quick-item" onclick="showLectureDetail('${l.id}')"><div class="dot ${l.prio ? 'prio' : ''}"></div><span style="flex:1;">${escapeHtml(l.title)}</span><span class="lec-date-badge">${l.date || 'kein Datum'}</span></div>`).join('')
-    : '<div style="color:var(--ink-2); padding:8px 0;">✅ Alle Vorlesungen nachgeholt</div>';
-
-  const allOpenTodos = data.todos.filter(t => !t.done).slice(0,6);
-  document.getElementById('dash-todos-list').innerHTML = allOpenTodos.length
-    ? allOpenTodos.map(t => `<div class="todo-quick-item" onclick="showTodoDetail('${t.id}')"><div class="dot ${t.prio === 'high' ? 'prio' : ''}"></div><span style="flex:1;">${escapeHtml(t.text)}</span><span class="lec-date-badge">${t.subject || 'kein Fach'}</span></div>`).join('')
-    : '<div style="color:var(--ink-2); padding:8px 0;">✅ Keine offenen Aufgaben</div>';
+function updateSubjectDatalist(){
+  const subjects=[...new Set(data.lectures.map(l=>l.subject).filter(Boolean))];
+  const datalist=document.getElementById('subject-datalist');
+  if(datalist)datalist.innerHTML=subjects.map(s=>`<option value="${escapeHtml(s)}">`).join('');
 }
-
-// ── Lectures ─────────────────────────────────────────────────────
-function renderLectures() {
-  let list = data.lectures.filter(l => !l.cancelled);
-  const search = document.getElementById('lec-search')?.value.toLowerCase() || '';
-  const subjectF = document.getElementById('lec-filter-subject')?.value || '';
-  if(search) list = list.filter(l => l.title.toLowerCase().includes(search) || (l.subject||'').toLowerCase().includes(search));
-  if(subjectF) list = list.filter(l => l.subject === subjectF);
-  if(lecFilter === 'todo') list = list.filter(l => !l.done);
-  if(lecFilter === 'done') list = list.filter(l => l.done);
-  if(lecFilter === 'prio') list = list.filter(l => l.prio);
-  if(lecFilter === 'cancelled') { list = data.lectures.filter(l => l.cancelled); }
-  const container = document.getElementById('lecture-list');
-  if(!list.length) { container.innerHTML = '<div class="empty-state">📭 Keine Vorlesungen</div>'; return; }
-  container.innerHTML = list.map(l => `<div class="lecture-card ${l.done ? 'done' : ''} ${l.cancelled ? 'cancelled' : ''}"><div style="display:flex; align-items:flex-start;"><div class="lec-check ${l.done ? 'checked' : ''}" onclick="event.stopPropagation(); toggleLec('${l.id}')"></div><div class="lec-body"><div class="lec-title" onclick="showLectureDetail('${l.id}')">${escapeHtml(l.title)}</div><div class="lec-meta">${escapeHtml(l.subject || '')} ${l.date ? '· ' + l.date : ''}</div><div class="lec-tags">${!l.done && !l.cancelled ? '<span class="tag">nachholen</span>' : ''}${l.prio ? '<span class="tag prio">priorität</span>' : ''}${l.cancelled ? '<span class="tag cancelled">ausgefallen</span>' : ''}${l.done && !l.cancelled ? '<span class="tag done-tag">erledigt</span>' : ''}</div></div><div class="lec-actions"><button class="btn small" onclick="event.stopPropagation(); openLecModal('${l.id}')">✎</button><button class="btn small danger" onclick="event.stopPropagation(); deleteLec('${l.id}')">✕</button></div></div></div>`).join('');
-  const subjects = [...new Set(data.lectures.map(l=>l.subject).filter(Boolean))];
-  const sel = document.getElementById('lec-filter-subject'); if(sel) sel.innerHTML = '<option value="">Alle Rechtsgebiete</option>' + subjects.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+function renderLectures(){
+  let list=data.lectures.filter(l=>!l.cancelled);
+  const search=document.getElementById('lec-search')?.value.toLowerCase()||'';
+  const subjectF=document.getElementById('lec-filter-subject')?.value||'';
+  if(search)list=list.filter(l=>l.title.toLowerCase().includes(search)||(l.subject||'').toLowerCase().includes(search));
+  if(subjectF)list=list.filter(l=>l.subject===subjectF);
+  if(lecFilter==='todo')list=list.filter(l=>!l.done);
+  if(lecFilter==='done')list=list.filter(l=>l.done);
+  if(lecFilter==='prio')list=list.filter(l=>l.prio);
+  if(lecFilter==='cancelled'){list=data.lectures.filter(l=>l.cancelled);}
+  const container=document.getElementById('lecture-list');
+  if(!list.length){container.innerHTML='<div class="empty-state"><div class="empty-state-icon">📭</div>Keine Vorlesungen</div>';return;}
+  container.innerHTML=list.map(l=>`<div class="list-item ${l.done?'done':''} ${l.cancelled?'cancelled':''}">
+    <div class="item-check ${l.done?'checked':''}" onclick="event.stopPropagation();toggleLec('${l.id}')"></div>
+    <div class="item-body" onclick="showLectureDetail('${l.id}')">
+      <div class="item-title">${escapeHtml(l.title)}</div>
+      <div class="item-meta">${escapeHtml(l.subject||'')} ${l.date?'· '+l.date:''}</div>
+      <div class="item-tags">${!l.done&&!l.cancelled?'<span class="tag accent">nachholen</span>':''}${l.prio?'<span class="tag danger">Priorität</span>':''}${l.cancelled?'<span class="tag danger">ausgefallen</span>':''}${l.done&&!l.cancelled?'<span class="tag success">erledigt</span>':''}</div>
+    </div>
+    <div class="item-actions">
+      <button class="btn small" onclick="event.stopPropagation();openLecModal('${l.id}')">✎</button>
+      <button class="btn small danger" onclick="event.stopPropagation();deleteLec('${l.id}')">✕</button>
+    </div>
+  </div>`).join('');
+  const subjects=[...new Set(data.lectures.map(l=>l.subject).filter(Boolean))];
+  const sel=document.getElementById('lec-filter-subject');if(sel)sel.innerHTML='<option value="">Alle Rechtsgebiete</option>'+subjects.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
   updateSubjectDatalist();
 }
-
-function openLecModal(id) {
-  lecEditId = id || null;
-  const modal = document.getElementById('lec-modal');
-  modal.classList.remove('hidden');
-  if(id) {
-    const l = data.lectures.find(x=>x.id===id);
-    document.getElementById('lec-modal-title').innerText = 'Vorlesung bearbeiten';
-    document.getElementById('lec-m-subject').value = l.subject || '';
-    document.getElementById('lec-m-date').value = l.date || '';
-    document.getElementById('lec-m-link').value = l.link||'';
-    document.getElementById('lec-m-note').value = l.note||'';
-    document.getElementById('lec-m-prio').checked = !!l.prio;
-    document.getElementById('lec-m-cancelled').checked = !!l.cancelled;
-  } else {
-    document.getElementById('lec-modal-title').innerText = 'Neue Vorlesung';
-    document.getElementById('lec-m-subject').value = '';
-    document.getElementById('lec-m-date').value = '';
-    document.getElementById('lec-m-link').value = '';
-    document.getElementById('lec-m-note').value = '';
-    document.getElementById('lec-m-prio').checked = false;
-    document.getElementById('lec-m-cancelled').checked = false;
+function openLecModal(id){
+  lecEditId=id||null;openModal('lec-modal');
+  if(id){
+    const l=data.lectures.find(x=>x.id===id);
+    document.getElementById('lec-modal-title').innerText='Vorlesung bearbeiten';
+    document.getElementById('lec-m-subject').value=l.subject||'';
+    document.getElementById('lec-m-date').value=l.date||'';
+    document.getElementById('lec-m-link').value=l.link||'';
+    document.getElementById('lec-m-note').value=l.note||'';
+    document.getElementById('lec-m-prio').checked=!!l.prio;
+    document.getElementById('lec-m-cancelled').checked=!!l.cancelled;
+  }else{
+    document.getElementById('lec-modal-title').innerText='Neue Vorlesung';
+    document.getElementById('lec-m-subject').value='';
+    document.getElementById('lec-m-date').value='';
+    document.getElementById('lec-m-link').value='';
+    document.getElementById('lec-m-note').value='';
+    document.getElementById('lec-m-prio').checked=false;
+    document.getElementById('lec-m-cancelled').checked=false;
   }
   updateSubjectDatalist();
 }
-function closeLecModal() { document.getElementById('lec-modal').classList.add('hidden'); lecEditId=null; }
-
-function saveLec() {
-  const subject = document.getElementById('lec-m-subject').value.trim();
-  if(!subject) { toast('Bitte ein Rechtsgebiet/Fach eingeben.'); return; }
-  const dateRaw = document.getElementById('lec-m-date').value;
-  const cancelled = document.getElementById('lec-m-cancelled').checked;
-  if(lecEditId) {
-    const l = data.lectures.find(x=>x.id===lecEditId);
-    if(l) {
-      const oldSubject = l.subject;
-      l.subject = subject; l.date = dateRaw;
-      l.link = document.getElementById('lec-m-link').value.trim();
-      l.note = document.getElementById('lec-m-note').value.trim();
-      l.prio = document.getElementById('lec-m-prio').checked;
-      
-      l.cancelled = cancelled;
-      renumberSubjectLectures(subject);
-      if (oldSubject !== subject && oldSubject) renumberSubjectLectures(oldSubject);
-      toast('Gespeichert');
-    }
-  } else {
-    if (cancelled) {
-      const datePart = dateRaw ? ` (${dateRaw})` : '';
-      data.lectures.push({ id: Date.now().toString(), title: `${subject} - ausgefallen${datePart}`, subject, date: dateRaw, link: document.getElementById('lec-m-link').value.trim(), note: document.getElementById('lec-m-note').value.trim(), prio: document.getElementById('lec-m-prio').checked, done: false, cancelled: true });
-    } else {
-      data.lectures.push({ id: Date.now().toString(), title: '', subject, date: dateRaw, link: document.getElementById('lec-m-link').value.trim(), note: document.getElementById('lec-m-note').value.trim(), prio: document.getElementById('lec-m-prio').checked, done: false, cancelled: false });
-      renumberSubjectLectures(subject);
-    }
+function closeLecModal(){closeModal('lec-modal');lecEditId=null;}
+function saveLec(){
+  const subject=document.getElementById('lec-m-subject').value.trim();
+  if(!subject){toast('Bitte ein Rechtsgebiet eingeben.');return;}
+  const dateRaw=document.getElementById('lec-m-date').value;
+  const cancelled=document.getElementById('lec-m-cancelled').checked;
+  if(lecEditId){
+    const l=data.lectures.find(x=>x.id===lecEditId);
+    if(l){const oldSubject=l.subject;l.subject=subject;l.date=dateRaw;l.link=document.getElementById('lec-m-link').value.trim();l.note=document.getElementById('lec-m-note').value.trim();l.prio=document.getElementById('lec-m-prio').checked;l.cancelled=cancelled;renumberSubjectLectures(subject);if(oldSubject!==subject&&oldSubject)renumberSubjectLectures(oldSubject);toast('Gespeichert');}
+  }else{
+    if(cancelled){const datePart=dateRaw?` (${dateRaw})`:'';data.lectures.push({id:Date.now().toString(),title:`${subject} - ausgefallen${datePart}`,subject,date:dateRaw,link:document.getElementById('lec-m-link').value.trim(),note:document.getElementById('lec-m-note').value.trim(),prio:document.getElementById('lec-m-prio').checked,done:false,cancelled:true});}
+    else{data.lectures.push({id:Date.now().toString(),title:'',subject,date:dateRaw,link:document.getElementById('lec-m-link').value.trim(),note:document.getElementById('lec-m-note').value.trim(),prio:document.getElementById('lec-m-prio').checked,done:false,cancelled:false});renumberSubjectLectures(subject);}
     toast('Vorlesung hinzugefügt');
   }
-  saveToLocal(); closeLecModal(); renderLectures();
+  saveToLocal();closeLecModal();renderLectures();
 }
-
-function toggleLec(id) {
-  const l = data.lectures.find(x=>x.id===id);
-  if(l && !l.cancelled) { l.done = !l.done; saveToLocal(); renderLectures(); updateDash(); toast(l.done ? 'Nachgeholt ✓' : 'Wieder offen'); }
-  else if(l?.cancelled) { toast('Ausgefallene Vorlesungen können nicht nachgeholt werden'); }
+function toggleLec(id){
+  const l=data.lectures.find(x=>x.id===id);
+  if(l&&!l.cancelled){l.done=!l.done;saveToLocal();renderLectures();updateDash();toast(l.done?'Nachgeholt ✓':'Wieder offen');}
+  else if(l?.cancelled){toast('Ausgefallene Vorlesungen können nicht nachgeholt werden');}
 }
-function deleteLec(id) {
-  if(confirm('Vorlesung löschen? (Wirkt sich auf Nummerierung aus)')) {
-    const lec = data.lectures.find(x=>x.id===id);
-    const subject = lec?.subject;
-    data.lectures = data.lectures.filter(x=>x.id!==id);
-    if(subject) renumberSubjectLectures(subject);
-    saveToLocal(); renderLectures(); toast('Gelöscht');
+function deleteLec(id){
+  if(confirm('Vorlesung löschen?')){
+    const lec=data.lectures.find(x=>x.id===id);const subject=lec?.subject;
+    data.lectures=data.lectures.filter(x=>x.id!==id);
+    if(subject)renumberSubjectLectures(subject);
+    saveToLocal();renderLectures();toast('Gelöscht');
   }
 }
-function setLecFilter(btn,val) { lecFilter=val; document.querySelectorAll('.filter-btn[data-lf]').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderLectures(); }
+function setLecFilter(btn,val){lecFilter=val;document.querySelectorAll('.chip[data-lf]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderLectures();}
 
-// ── Detail Modal ─────────────────────────────────────────────────
-
-function showLectureDetail(id) {
-  const lec = data.lectures.find(l=>l.id===id);
-  if(!lec) return;
-  currentDetailId = id;
-  currentDetailType = 'lecture';
-  document.getElementById('detail-title').innerText = '📘 Vorlesungsdetails';
-  document.getElementById('detail-content').innerHTML = `
-    <div class="detail-row"><div class="detail-label">Titel</div><div style="font-size:16px; color:var(--accent);">${escapeHtml(lec.title)}</div></div>
-    <div class="detail-row"><div class="detail-label">Rechtsgebiet</div><div>${escapeHtml(lec.subject) || '—'}</div></div>
-    <div class="detail-row"><div class="detail-label">Datum</div><div>${lec.date || 'Kein Datum'}</div></div>
-    <div class="detail-row"><div class="detail-label">Priorität</div><div>${lec.prio ? '⭐ Hoch' : 'Normal'}</div></div>
-    <div class="detail-row"><div class="detail-label">Status</div><div>${lec.cancelled ? '🚫 Ausgefallen' : (lec.done ? '✅ Erledigt / Nachgeholt' : '⏳ Offen / Nicht nachgeholt')}</div></div>
-    <div class="detail-row"><div class="detail-label">Erledigt?</div><label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="detail-done-checkbox" ${lec.done && !lec.cancelled ? 'checked' : ''} ${lec.cancelled ? 'disabled' : ''} onchange="toggleDoneFromDetail('${lec.id}')"> ${lec.cancelled ? '(Ausgefallen)' : 'Als nachgeholt markieren'}</label></div>
-    ${lec.link ? `<div class="detail-row"><div class="detail-label">Link</div><div><a href="${lec.link}" target="_blank" style="color:var(--accent-2);">Öffnen</a></div></div>` : ''}
-    ${lec.note ? `<div class="detail-row"><div class="detail-label">Notiz</div><div style="background:rgba(255,255,255,0.56); padding:10px; border-radius:8px;">${escapeHtml(lec.note)}</div></div>` : ''}
-  `;
-  // Show edit button for lectures
-  document.getElementById('detail-modal-actions').innerHTML = `
-    <button class="btn" onclick="closeDetailModal()">Schließen</button>
-    <button class="btn primary" onclick="editFromDetail()">✎ Bearbeiten</button>
-  `;
-  document.getElementById('detail-modal').classList.remove('hidden');
+// ── Detail Modal ──
+function showLectureDetail(id){
+  const lec=data.lectures.find(l=>l.id===id);if(!lec)return;
+  currentDetailId=id;currentDetailType='lecture';
+  document.getElementById('detail-title').innerText='📘 Vorlesungsdetails';
+  document.getElementById('detail-content').innerHTML=`
+    <div class="detail-row"><div class="detail-label">Titel</div><div style="font-size:16px;color:var(--accent);font-weight:600;">${escapeHtml(lec.title)}</div></div>
+    <div class="detail-row"><div class="detail-label">Rechtsgebiet</div><div class="detail-value">${escapeHtml(lec.subject)||'—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Datum</div><div class="detail-value">${lec.date||'Kein Datum'}</div></div>
+    <div class="detail-row"><div class="detail-label">Priorität</div><div class="detail-value">${lec.prio?'⭐ Hoch':'Normal'}</div></div>
+    <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value">${lec.cancelled?'🚫 Ausgefallen':(lec.done?'✅ Erledigt':'⏳ Offen')}</div></div>
+    <div class="detail-row"><div class="detail-label">Erledigt?</div><label class="checkbox-label"><input type="checkbox" id="detail-done-checkbox" ${lec.done&&!lec.cancelled?'checked':''} ${lec.cancelled?'disabled':''} onchange="toggleDoneFromDetail('${lec.id}')"> ${lec.cancelled?'(Ausgefallen)':'Als nachgeholt markieren'}</label></div>
+    ${lec.link?`<div class="detail-row"><div class="detail-label">Link</div><div><a href="${lec.link}" target="_blank" style="color:var(--accent);font-weight:500;">Öffnen ↗</a></div></div>`:''}
+    ${lec.note?`<div class="detail-row"><div class="detail-label">Notiz</div><div class="detail-box">${escapeHtml(lec.note)}</div></div>`:''}`;
+  document.getElementById('detail-modal-actions').innerHTML=`<button class="btn" onclick="closeDetailModal()">Schließen</button><button class="btn primary" onclick="editFromDetail()">✎ Bearbeiten</button>`;
+  openModal('detail-modal');
 }
-
-function toggleDoneFromDetail(id) {
-  const lec = data.lectures.find(l=>l.id===id);
-  if(lec && !lec.cancelled) {
-    lec.done = !lec.done; saveToLocal(); renderLectures();
-    showLectureDetail(id); toast(lec.done ? 'Als nachgeholt markiert ✓' : 'Als offen markiert');
-  }
+function toggleDoneFromDetail(id){
+  const lec=data.lectures.find(l=>l.id===id);
+  if(lec&&!lec.cancelled){lec.done=!lec.done;saveToLocal();renderLectures();showLectureDetail(id);toast(lec.done?'Als nachgeholt markiert ✓':'Als offen markiert');}
 }
-
-function showTodoDetail(id) {
-  const todo = data.todos.find(t=>t.id===id);
-  if(!todo) return;
-  currentDetailId = id;
-  currentDetailType = 'todo';
-  document.getElementById('detail-title').innerText = '✅ Aufgabendetails';
-  document.getElementById('detail-content').innerHTML = `
-    <div class="detail-row"><div class="detail-label">Aufgabe</div><div style="font-size:16px; color:var(--accent);">${escapeHtml(todo.text)}</div></div>
-    <div class="detail-row"><div class="detail-label">Fach</div><div>${escapeHtml(todo.subject) || '—'}</div></div>
-    <div class="detail-row"><div class="detail-label">Priorität</div><div>${todo.prio === 'high' ? '⭐ Hoch' : 'Normal'}</div></div>
-    <div class="detail-row"><div class="detail-label">Status</div><div>${todo.done ? '✅ Erledigt' : '⏳ Offen'}</div></div>
-    <div class="detail-row"><div class="detail-label">Erledigt?</div><label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" ${todo.done ? 'checked' : ''} onchange="toggleTodoDoneFromDetail('${todo.id}')"> Als erledigt markieren</label></div>
-    <div class="detail-row"><div class="detail-label">Erstellt am</div><div>${todo.date || ''}</div></div>
-  `;
-  // Todos have no edit modal, so only close button
-  document.getElementById('detail-modal-actions').innerHTML = `
-    <button class="btn" onclick="closeDetailModal()">Schließen</button>
-  `;
-  document.getElementById('detail-modal').classList.remove('hidden');
+function showTodoDetail(id){
+  const todo=data.todos.find(t=>t.id===id);if(!todo)return;
+  currentDetailId=id;currentDetailType='todo';
+  document.getElementById('detail-title').innerText='✅ Aufgabendetails';
+  document.getElementById('detail-content').innerHTML=`
+    <div class="detail-row"><div class="detail-label">Aufgabe</div><div style="font-size:16px;color:var(--accent);font-weight:600;">${escapeHtml(todo.text)}</div></div>
+    <div class="detail-row"><div class="detail-label">Fach</div><div class="detail-value">${escapeHtml(todo.subject)||'—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Priorität</div><div class="detail-value">${todo.prio==='high'?'⭐ Hoch':'Normal'}</div></div>
+    <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value">${todo.done?'✅ Erledigt':'⏳ Offen'}</div></div>
+    <div class="detail-row"><div class="detail-label">Erledigt?</div><label class="checkbox-label"><input type="checkbox" ${todo.done?'checked':''} onchange="toggleTodoDoneFromDetail('${todo.id}')"> Als erledigt markieren</label></div>
+    <div class="detail-row"><div class="detail-label">Erstellt am</div><div class="detail-value">${todo.date||''}</div></div>`;
+  document.getElementById('detail-modal-actions').innerHTML=`<button class="btn" onclick="closeDetailModal()">Schließen</button>`;
+  openModal('detail-modal');
 }
-
-function toggleTodoDoneFromDetail(id) {
-  const todo = data.todos.find(t=>t.id===id);
-  if(todo) { todo.done = !todo.done; saveToLocal(); renderTodos(); showTodoDetail(id); toast(todo.done ? 'Aufgabe erledigt ✓' : 'Aufgabe wieder offen'); }
+function toggleTodoDoneFromDetail(id){
+  const todo=data.todos.find(t=>t.id===id);
+  if(todo){todo.done=!todo.done;saveToLocal();renderTodos();showTodoDetail(id);toast(todo.done?'Aufgabe erledigt ✓':'Aufgabe wieder offen');}
 }
+function closeDetailModal(){closeModal('detail-modal');currentDetailId=null;currentDetailType=null;}
+function editFromDetail(){const id=currentDetailId;closeDetailModal();if(id)openLecModal(id);}
 
-function closeDetailModal() { document.getElementById('detail-modal').classList.add('hidden'); currentDetailId = null; currentDetailType = null; }
-
-
-function editFromDetail() {
-  const id = currentDetailId;
-  closeDetailModal();
-  if(id) openLecModal(id);
-}
-
-// ── Schedule ─────────────────────────────────────────────────────
-function renderSchedule() {
-  const days = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
-  const container = document.getElementById('schedule-container');
-  container.innerHTML = days.map(day => {
-    const items = data.schedule.filter(e => e.day === day);
-    return `<div class="schedule-day" ondragover="event.preventDefault()" ondrop="handleScheduleDrop(event, '${day}')"><h4>${day}</h4>${items.length ? items.map(item => `
-      <div class="schedule-item" draggable="true" ondragstart="startScheduleDrag(event, '${item.id}')">
-        <div class="schedule-meta"><strong>${escapeHtml(item.subject)}</strong><button class="btn small danger" onclick="event.stopPropagation(); deleteScheduleEntry('${item.id}')">✕</button></div>
-        <div class="schedule-period">${item.startDate || '?'} – ${item.endDate || '?'}</div>
-        <div class="schedule-period">${escapeHtml(item.time || '')}</div>
-      </div>
-    `).join('') : '<div class="schedule-empty">— Kein Termin —</div>'}</div>`;
+// ── Schedule ──
+function renderSchedule(){
+  const days=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
+  const container=document.getElementById('schedule-container');
+  container.innerHTML=days.map(day=>{
+    const items=data.schedule.filter(e=>e.day===day);
+    return`<div class="schedule-day" ondragover="event.preventDefault()" ondrop="handleScheduleDrop(event,'${day}')"><h4>${day}</h4>${items.length?items.map(item=>`<div class="schedule-slot" draggable="true" ondragstart="startScheduleDrag(event,'${item.id}')"><div class="slot-time">${escapeHtml(item.time||'')}</div><div class="slot-subject">${escapeHtml(item.subject)}</div><div class="slot-meta"><span class="text-muted" style="font-size:11px;font-family:'JetBrains Mono',monospace;">${item.startDate||'?'} – ${item.endDate||'?'}</span><button class="btn small danger" onclick="event.stopPropagation();deleteScheduleEntry('${item.id}')">✕</button></div></div>`).join(''):'<div class="schedule-empty">— Kein Termin —</div>'}</div>`;
   }).join('');
 }
-function startScheduleDrag(event, id) { event.dataTransfer.setData('text/plain', id); }
-function handleScheduleDrop(event, day) {
+function startScheduleDrag(event,id){event.dataTransfer.setData('text/plain',id);}
+function handleScheduleDrop(event,day){
   event.preventDefault();
-  const id = event.dataTransfer.getData('text/plain');
-  const entry = data.schedule.find(e => e.id === id);
-  if (!entry) return;
-  entry.day = day;
-  saveToLocal(); renderSchedule(); toast(`Termin nach ${day} verschoben`);
+  const id=event.dataTransfer.getData('text/plain');
+  const entry=data.schedule.find(e=>e.id===id);
+  if(!entry)return;
+  entry.day=day;saveToLocal();renderSchedule();toast(`Termin nach ${day} verschoben`);
 }
-function openScheduleModal() { document.getElementById('schedule-modal').classList.remove('hidden'); document.getElementById('sched-start').value = ''; document.getElementById('sched-end').value = ''; }
-function closeScheduleModal() { document.getElementById('schedule-modal').classList.add('hidden'); }
-function saveScheduleEntry() {
-  const subject = document.getElementById('sched-subject').value.trim();
-  if(!subject) { toast('Rechtsgebiet erforderlich'); return; }
-  const startDate = document.getElementById('sched-start').value;
-  const endDate = document.getElementById('sched-end').value;
-  if(!startDate || !endDate) { toast('Bitte Start- und Enddatum des Zeitraums angeben'); return; }
-  data.schedule.push({ id: Date.now().toString(), day: document.getElementById('sched-day').value, subject, time: document.getElementById('sched-time').value.trim(), startDate, endDate });
-  saveToLocal(); renderSchedule(); closeScheduleModal(); toast('Termin hinzugefügt');
+function openScheduleModal(){openModal('schedule-modal');document.getElementById('sched-start').value='';document.getElementById('sched-end').value='';}
+function closeScheduleModal(){closeModal('schedule-modal');}
+function saveScheduleEntry(){
+  const subject=document.getElementById('sched-subject').value.trim();
+  if(!subject){toast('Rechtsgebiet erforderlich');return;}
+  const startDate=document.getElementById('sched-start').value;
+  const endDate=document.getElementById('sched-end').value;
+  if(!startDate||!endDate){toast('Bitte Start- und Enddatum angeben');return;}
+  data.schedule.push({id:Date.now().toString(),day:document.getElementById('sched-day').value,subject,time:document.getElementById('sched-time').value.trim(),startDate,endDate});
+  saveToLocal();renderSchedule();closeScheduleModal();toast('Termin hinzugefügt');
 }
-function deleteScheduleEntry(id) { if(confirm('Termin löschen?')) { data.schedule = data.schedule.filter(e => e.id !== id); saveToLocal(); renderSchedule(); toast('Entfernt'); } }
+function deleteScheduleEntry(id){if(confirm('Termin löschen?')){data.schedule=data.schedule.filter(e=>e.id!==id);saveToLocal();renderSchedule();toast('Entfernt');}}
 
-function generatePastLecturesFromSchedule() {
-  const today = new Date(); today.setHours(0,0,0,0);
-  const weekdays = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
-  let created = 0;
-  for (const entry of data.schedule) {
-    if (!entry.startDate || !entry.endDate) continue;
-    const [sy,sm,sd] = entry.startDate.split('-').map(Number);
-    const [ey,em,ed] = entry.endDate.split('-').map(Number);
-    const start = new Date(sy, sm-1, sd);
-    const end = new Date(ey, em-1, ed);
-    let current = new Date(start);
-    while (current <= end && current <= today) {
-      const dayName = weekdays[current.getDay()];
-      if (dayName === entry.day) {
-        const y = current.getFullYear();
-        const m = String(current.getMonth()+1).padStart(2,'0');
-        const d = String(current.getDate()).padStart(2,'0');
-        const dateStr = `${y}-${m}-${d}`;
-        
-        const alreadyExists = data.lectures.some(l => l.subject === entry.subject && l.date === dateStr);
-        if (!alreadyExists) {
-          data.lectures.push({ id: Date.now().toString() + Math.random(), title: '', subject: entry.subject, date: dateStr, link: '', note: `Generiert aus Stundenplan (${entry.day}, Zeitraum: ${entry.startDate} bis ${entry.endDate})`, prio: false, done: false, cancelled: false });
-          created++;
-          renumberSubjectLectures(entry.subject);
+function generatePastLecturesFromSchedule(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const weekdays=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+  let created=0;
+  for(const entry of data.schedule){
+    if(!entry.startDate||!entry.endDate)continue;
+    const[sy,sm,sd]=entry.startDate.split('-').map(Number);
+    const[ey,em,ed]=entry.endDate.split('-').map(Number);
+    const start=new Date(sy,sm-1,sd);
+    const end=new Date(ey,em-1,ed);
+    let current=new Date(start);
+    while(current<=end&&current<=today){
+      const dayName=weekdays[current.getDay()];
+      if(dayName===entry.day){
+        const y=current.getFullYear(),m=String(current.getMonth()+1).padStart(2,'0'),d=String(current.getDate()).padStart(2,'0');
+        const dateStr=`${y}-${m}-${d}`;
+        const alreadyExists=data.lectures.some(l=>l.subject===entry.subject&&l.date===dateStr);
+        if(!alreadyExists){
+          data.lectures.push({id:Date.now().toString()+Math.random(),title:'',subject:entry.subject,date:dateStr,link:'',note:`Generiert aus Stundenplan (${entry.day}, ${entry.startDate} bis ${entry.endDate})`,prio:false,done:false,cancelled:false});
+          created++;renumberSubjectLectures(entry.subject);
         }
       }
-      current.setDate(current.getDate() + 1);
+      current.setDate(current.getDate()+1);
     }
   }
-  saveToLocal(); renderLectures(); updateDash();
+  saveToLocal();renderLectures();updateDash();
   toast(`${created} neue Vorlesungen generiert.`);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LERNPLAN MODUL
+// LERNPLAN
 // ═══════════════════════════════════════════════════════════════
-
-const TYPE_LABELS = { rechtsgebiet: 'Rechtsgebiet nacharbeiten', klausur: 'Klausur schreiben', karteikarten: 'Karteikarten lernen', frei: 'Frei / Sonstiges' };
-const WEEKDAY_NAMES = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
-let lernplanTab = 'queue';
-
-function setLernplanTab(btn, val) {
-  lernplanTab = val;
-  document.querySelectorAll('.filter-btn[data-lp]').forEach(b => b.classList.remove('active'));
+let lernplanTab='queue';
+function setLernplanTab(btn,val){
+  lernplanTab=val;
+  document.querySelectorAll('.chip[data-lp]').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('lp-queue-view').style.display = val === 'queue' ? 'block' : 'none';
-  document.getElementById('lp-week-view').style.display = val === 'week' ? 'block' : 'none';
-  if (val === 'queue') renderSubjectQueue();
-  if (val === 'week') { if (!currentWeekStart) currentWeekStart = getMonday(new Date()); renderWeekCalendar(); }
+  document.getElementById('lp-queue-view').style.display=val==='queue'?'block':'none';
+  document.getElementById('lp-week-view').style.display=val==='week'?'block':'none';
+  if(val==='queue')renderSubjectQueue();
+  if(val==='week'){if(!currentWeekStart)currentWeekStart=getMonday(new Date());renderWeekCalendar();}
 }
 
-function fmtDate(d) { const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
-function getMonday(d) { const date = new Date(d); const day = date.getDay(); const diff = (day === 0 ? -6 : 1 - day); date.setDate(date.getDate() + diff); date.setHours(0,0,0,0); return date; }
-function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
-
-// ── Rechtsgebietsplan (Warteschlange) ──────────────────────────────
-function openSubjectQueueModal() {
-  lernplanSubjectEditId = null;
-  document.getElementById('sq-modal-title').innerText = 'Rechtsgebiet zur Warteschlange hinzufügen';
-  document.getElementById('sq-subject').value = '';
-  document.getElementById('sq-units').value = 1;
-  document.getElementById('subject-queue-modal').classList.remove('hidden');
+// ── Queue ──
+function openSubjectQueueModal(){
+  lernplanSubjectEditId=null;
+  document.getElementById('sq-modal-title').innerText='Rechtsgebiet zur Warteschlange';
+  document.getElementById('sq-subject').value='';
+  document.getElementById('sq-units').value=1;
+  openModal('subject-queue-modal');
   updateSubjectDatalist();
 }
-function closeSubjectQueueModal() { document.getElementById('subject-queue-modal').classList.add('hidden'); }
-function editSubjectQueueEntry(id) {
-  const e = data.subjectQueue.find(x => x.id === id); if (!e) return;
-  lernplanSubjectEditId = id;
-  document.getElementById('sq-modal-title').innerText = 'Rechtsgebiet bearbeiten';
-  document.getElementById('sq-subject').value = e.subject;
-  document.getElementById('sq-units').value = e.units;
-  document.getElementById('subject-queue-modal').classList.remove('hidden');
+function closeSubjectQueueModal(){closeModal('subject-queue-modal');}
+function editSubjectQueueEntry(id){
+  const e=data.subjectQueue.find(x=>x.id===id);if(!e)return;
+  lernplanSubjectEditId=id;
+  document.getElementById('sq-modal-title').innerText='Rechtsgebiet bearbeiten';
+  document.getElementById('sq-subject').value=e.subject;
+  document.getElementById('sq-units').value=e.units;
+  openModal('subject-queue-modal');
 }
-function saveSubjectQueueEntry() {
-  const subject = document.getElementById('sq-subject').value.trim();
-  const units = parseInt(document.getElementById('sq-units').value, 10);
-  if (!subject) { toast('Bitte ein Rechtsgebiet eingeben.'); return; }
-  if (!units || units < 1) { toast('Bitte eine gültige Anzahl Einheiten eingeben.'); return; }
-  if (lernplanSubjectEditId) {
-    const e = data.subjectQueue.find(x => x.id === lernplanSubjectEditId);
-    const doneUnits = e.units - e.remaining;
-    e.subject = subject; e.units = units; e.remaining = Math.max(0, units - doneUnits);
-  } else {
-    data.subjectQueue.push({ id: Date.now().toString(), subject, units, remaining: units });
+function saveSubjectQueueEntry(){
+  const subject=document.getElementById('sq-subject').value.trim();
+  const units=parseInt(document.getElementById('sq-units').value,10);
+  if(!subject){toast('Bitte ein Rechtsgebiet eingeben.');return;}
+  if(!units||units<1){toast('Bitte gültige Anzahl eingeben.');return;}
+  if(lernplanSubjectEditId){
+    const e=data.subjectQueue.find(x=>x.id===lernplanSubjectEditId);
+    const doneUnits=e.units-e.remaining;
+    e.subject=subject;e.units=units;e.remaining=Math.max(0,units-doneUnits);
+  }else{
+    data.subjectQueue.push({id:Date.now().toString(),subject,units,remaining:units});
   }
-  saveToLocal(); closeSubjectQueueModal(); renderSubjectQueue();
-  if (lernplanTab === 'week') renderWeekCalendar();
+  saveToLocal();closeSubjectQueueModal();renderSubjectQueue();
+  if(lernplanTab==='week')renderWeekCalendar();
   toast('Gespeichert');
 }
-function deleteSubjectQueueEntry(id) {
-  if (!confirm('Rechtsgebiet aus der Warteschlange entfernen?')) return;
-  data.subjectQueue = data.subjectQueue.filter(x => x.id !== id);
-  saveToLocal(); renderSubjectQueue(); toast('Entfernt');
+function deleteSubjectQueueEntry(id){
+  if(!confirm('Rechtsgebiet entfernen?'))return;
+  data.subjectQueue=data.subjectQueue.filter(x=>x.id!==id);
+  saveToLocal();renderSubjectQueue();toast('Entfernt');
 }
-function moveQueueEntry(id, dir) {
-  const idx = data.subjectQueue.findIndex(x => x.id === id);
-  const newIdx = idx + dir;
-  if (newIdx < 0 || newIdx >= data.subjectQueue.length) return;
-  const arr = data.subjectQueue;
-  [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
-  saveToLocal(); renderSubjectQueue();
+function moveQueueEntry(id,dir){
+  const idx=data.subjectQueue.findIndex(x=>x.id===id);
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=data.subjectQueue.length)return;
+  const arr=data.subjectQueue;
+  [arr[idx],arr[newIdx]]=[arr[newIdx],arr[idx]];
+  saveToLocal();renderSubjectQueue();
 }
-function dragQueueEntry(id) { draggedQueueId = id; }
-function dropQueueEntry(targetId) {
-  if (!draggedQueueId || draggedQueueId === targetId) return;
-  const fromIdx = data.subjectQueue.findIndex(x => x.id === draggedQueueId);
-  const toIdx = data.subjectQueue.findIndex(x => x.id === targetId);
-  if (fromIdx < 0 || toIdx < 0) return;
-  const [moved] = data.subjectQueue.splice(fromIdx, 1);
-  data.subjectQueue.splice(toIdx, 0, moved);
-  saveToLocal(); renderSubjectQueue(); draggedQueueId = null; toast('Reihenfolge angepasst');
+function dragQueueEntry(id){draggedQueueId=id;}
+function dropQueueEntry(targetId){
+  if(!draggedQueueId||draggedQueueId===targetId)return;
+  const fromIdx=data.subjectQueue.findIndex(x=>x.id===draggedQueueId);
+  const toIdx=data.subjectQueue.findIndex(x=>x.id===targetId);
+  if(fromIdx<0||toIdx<0)return;
+  const[moved]=data.subjectQueue.splice(fromIdx,1);
+  data.subjectQueue.splice(toIdx,0,moved);
+  saveToLocal();renderSubjectQueue();draggedQueueId=null;toast('Reihenfolge angepasst');
 }
-function renderSubjectQueue() {
-  const container = document.getElementById('subject-queue-list');
-  if (!data.subjectQueue.length) { container.innerHTML = '<div class="empty-state">📭 Keine Rechtsgebiete in der Warteschlange</div>'; return; }
-  container.innerHTML = data.subjectQueue.map((e, i) => {
-    const isActive = e.remaining > 0 && data.subjectQueue.slice(0, i).every(prev => prev.remaining <= 0);
-    const pct = e.units ? ((e.units - e.remaining) / e.units) * 100 : 0;
-    return `<div class="queue-item ${isActive ? 'active-item' : ''}" draggable="true" ondragstart="dragQueueEntry('${e.id}')" ondragover="event.preventDefault()" ondrop="dropQueueEntry('${e.id}')">
+function renderSubjectQueue(){
+  const container=document.getElementById('subject-queue-list');
+  if(!data.subjectQueue.length){container.innerHTML='<div class="empty-state"><div class="empty-state-icon">📭</div>Keine Rechtsgebiete in der Warteschlange</div>';return;}
+  container.innerHTML=data.subjectQueue.map((e,i)=>{
+    const isActive=e.remaining>0&&data.subjectQueue.slice(0,i).every(prev=>prev.remaining<=0);
+    const pct=e.units?((e.units-e.remaining)/e.units)*100:0;
+    return`<div class="queue-item ${isActive?'active-item':''}" draggable="true" ondragstart="dragQueueEntry('${e.id}')" ondragover="event.preventDefault()" ondrop="dropQueueEntry('${e.id}')">
       <div class="queue-pos">${i+1}</div>
       <div class="queue-info">
-        <div class="queue-subject">${escapeHtml(e.subject)} ${isActive ? '⏳' : (e.remaining <= 0 ? '✅' : '')}</div>
-        <div class="queue-units">${e.units - e.remaining} / ${e.units} Einheiten erarbeitet</div>
+        <div class="queue-subject">${escapeHtml(e.subject)} ${isActive?'⏳':(e.remaining<=0?'✅':'')}</div>
+        <div class="queue-units">${e.units-e.remaining} / ${e.units} Einheiten erarbeitet</div>
         <div class="queue-progress-outer"><div class="queue-progress-inner" style="width:${pct}%"></div></div>
       </div>
-      <div class="lec-actions" style="float:none;">
-        <button class="btn small" onclick="event.stopPropagation(); moveQueueEntry('${e.id}',-1)">↑</button>
-        <button class="btn small" onclick="event.stopPropagation(); moveQueueEntry('${e.id}',1)">↓</button>
-        <button class="btn small" onclick="event.stopPropagation(); editSubjectQueueEntry('${e.id}')">✎</button>
-        <button class="btn small danger" onclick="event.stopPropagation(); deleteSubjectQueueEntry('${e.id}')">✕</button>
+      <div class="item-actions" style="opacity:1;">
+        <button class="btn small" onclick="event.stopPropagation();moveQueueEntry('${e.id}',-1)">↑</button>
+        <button class="btn small" onclick="event.stopPropagation();moveQueueEntry('${e.id}',1)">↓</button>
+        <button class="btn small" onclick="event.stopPropagation();editSubjectQueueEntry('${e.id}')">✎</button>
+        <button class="btn small danger" onclick="event.stopPropagation();deleteSubjectQueueEntry('${e.id}')">✕</button>
       </div>
     </div>`;
   }).join('');
 }
 
-// Nächstes verfügbares Rechtsgebiet aus der Queue holen (ohne zu verbrauchen)
-function peekNextSubject() {
-  const candidates = data.subjectQueue.filter(e => e.remaining > 0);
-  if (!candidates.length) return null;
-  if (candidates.length === 1) return candidates[0];
-  const first = candidates[0];
-  const second = candidates[1];
-  if (!lastAlternatingSubjectId || !candidates.some(x => x.id === lastAlternatingSubjectId)) {
-    return first;
-  }
-  return lastAlternatingSubjectId === first.id ? second : first;
+// Nächstes Fach aus Queue (abwechselnd die ersten beiden offenen)
+function peekNextSubject(){
+  const candidates=data.subjectQueue.filter(e=>e.remaining>0);
+  if(!candidates.length)return null;
+  if(candidates.length===1)return candidates[0];
+  const first=candidates[0],second=candidates[1];
+  if(!lastAlternatingSubjectId||!candidates.some(x=>x.id===lastAlternatingSubjectId))return first;
+  return lastAlternatingSubjectId===first.id?second:first;
 }
-function peekNextSubjectInState(queueState, lastId) {
-  const candidates = queueState.filter(e => e.remaining > 0);
-  if (!candidates.length) return null;
-  if (candidates.length === 1) return candidates[0];
-  const first = candidates[0];
-  const second = candidates[1];
-  if (!lastId || !candidates.some(x => x.id === lastId)) {
-    return first;
-  }
-  return lastId === first.id ? second : first;
+function peekNextSubjectInState(queueState,lastId){
+  const candidates=queueState.filter(e=>e.remaining>0);
+  if(!candidates.length)return null;
+  if(candidates.length===1)return candidates[0];
+  const first=candidates[0],second=candidates[1];
+  if(!lastId||!candidates.some(x=>x.id===lastId))return first;
+  return lastId===first.id?second:first;
 }
-function consumeSubjectUnit(subjectName) {
-  if (subjectName) {
-    const specific = data.subjectQueue.find(x => x.subject === subjectName && x.remaining > 0);
-    if (specific) {
-      specific.remaining -= 1;
-      lastAlternatingSubjectId = specific.id;
-      saveToLocal();
-      return specific.subject;
-    }
+function consumeSubjectUnit(subjectName){
+  if(subjectName){
+    const specific=data.subjectQueue.find(x=>x.subject===subjectName&&x.remaining>0);
+    if(specific){specific.remaining-=1;lastAlternatingSubjectId=specific.id;saveToLocal();return specific.subject;}
   }
-  const e = peekNextSubject();
-  if (!e) return null;
-  e.remaining -= 1;
-  lastAlternatingSubjectId = e.id;
-  saveToLocal();
+  const e=peekNextSubject();
+  if(!e)return null;
+  e.remaining-=1;lastAlternatingSubjectId=e.id;saveToLocal();
   return e.subject;
 }
-function assignSubjectsToSlots(dateStrs) {
-  const queueState = data.subjectQueue.map(e => ({ ...e }));
-  const normalized = [...new Set(dateStrs)].sort();
-  normalized.forEach(dateStr => {
-    const slots = data.weekPlanDays[dateStr] || [];
-    slots.forEach(slot => {
-      if (slot.type === 'rechtsgebiet' && !slot.done && slot.subject) {
-        const q = queueState.find(x => x.subject === slot.subject);
-        if (q && q.remaining > 0) q.remaining -= 1;
+function refundSubjectUnit(subjectName){
+  if(!subjectName)return;
+  const e=data.subjectQueue.find(x=>x.subject===subjectName&&x.remaining<x.units);
+  if(e){e.remaining+=1;saveToLocal();}
+}
+function assignSubjectsToSlots(dateStrs){
+  const queueState=data.subjectQueue.map(e=>({...e}));
+  const normalized=[...new Set(dateStrs)].sort();
+  normalized.forEach(dateStr=>{
+    const slots=data.weekPlanDays[dateStr]||[];
+    slots.forEach(slot=>{
+      if(slot.type==='rechtsgebiet'&&!slot.done&&slot.subject){
+        const q=queueState.find(x=>x.subject===slot.subject);
+        if(q&&q.remaining>0)q.remaining-=1;
       }
     });
   });
-  let tempLastId = lastAlternatingSubjectId && queueState.some(x => x.id === lastAlternatingSubjectId) ? lastAlternatingSubjectId : null;
-  normalized.forEach(dateStr => {
-    const slots = data.weekPlanDays[dateStr] || [];
-    slots.forEach(slot => {
-      if (slot.type !== 'rechtsgebiet' || slot.done || slot.subject) return;
-      const next = peekNextSubjectInState(queueState, tempLastId);
-      if (!next) return;
-      slot.subject = next.subject;
-      tempLastId = next.id;
-      const q = queueState.find(x => x.id === next.id);
-      if (q && q.remaining > 0) q.remaining -= 1;
+  let tempLastId=lastAlternatingSubjectId&&queueState.some(x=>x.id===lastAlternatingSubjectId)?lastAlternatingSubjectId:null;
+  normalized.forEach(dateStr=>{
+    const slots=data.weekPlanDays[dateStr]||[];
+    slots.forEach(slot=>{
+      if(slot.type!=='rechtsgebiet'||slot.done||slot.subject)return;
+      const next=peekNextSubjectInState(queueState,tempLastId);
+      if(!next)return;
+      slot.subject=next.subject;
+      tempLastId=next.id;
+      const q=queueState.find(x=>x.id===next.id);
+      if(q&&q.remaining>0)q.remaining-=1;
     });
   });
 }
-// Eine Einheit "zurückgeben" (wenn ein Slot storniert/ungeschehen gemacht wird)
-function refundSubjectUnit(subjectName) {
-  if (!subjectName) return;
-  const e = data.subjectQueue.find(x => x.subject === subjectName && x.remaining < x.units);
-  if (e) { e.remaining += 1; saveToLocal(); }
-}
 
-// ── Wochenplan-Vorlage ──────────────────────────────────────────
-function setupWeekPlanTemplate() { renderWeekPlanTemplateList(); document.getElementById('weekplan-template-modal').classList.remove('hidden'); }
-function closeWeekPlanTemplateModal() { document.getElementById('weekplan-template-modal').classList.add('hidden'); }
-function addWeekPlanTemplateSlot() {
-  const day = document.getElementById('wpt-day').value;
-  const time = document.getElementById('wpt-time').value.trim();
-  const type = document.getElementById('wpt-type').value;
-  const label = document.getElementById('wpt-label').value.trim();
-  if (!time) { toast('Bitte eine Uhrzeit angeben.'); return; }
-  data.weekPlanSlots.push({ id: Date.now().toString(), day, time, type, label: label || TYPE_LABELS[type] });
-  data.weekPlanSlots.sort((a, b) => {
-    const dayA = WEEKDAY_NAMES.indexOf(a.day);
-    const dayB = WEEKDAY_NAMES.indexOf(b.day);
-    return dayA - dayB || a.time.localeCompare(b.time);
-  });
-  saveToLocal(); renderWeekPlanTemplateList();
-  if (lernplanTab === 'week') renderWeekCalendar();
-  document.getElementById('wpt-time').value = ''; document.getElementById('wpt-label').value = '';
+// ── Wochenplan-Vorlage ──
+function setupWeekPlanTemplate(){renderWeekPlanTemplateList();openModal('weekplan-template-modal');}
+function closeWeekPlanTemplateModal(){closeModal('weekplan-template-modal');}
+function addWeekPlanTemplateSlot(){
+  const day=document.getElementById('wpt-day').value;
+  const time=document.getElementById('wpt-time').value.trim();
+  const type=document.getElementById('wpt-type').value;
+  const label=document.getElementById('wpt-label').value.trim();
+  if(!time){toast('Bitte eine Uhrzeit angeben.');return;}
+  data.weekPlanSlots.push({id:Date.now().toString(),day,time,type,label:label||TYPE_LABELS[type]});
+  data.weekPlanSlots.sort((a,b)=>{const dayA=WEEKDAY_NAMES.indexOf(a.day);const dayB=WEEKDAY_NAMES.indexOf(b.day);return dayA-dayB||a.time.localeCompare(b.time);});
+  saveToLocal();renderWeekPlanTemplateList();
+  if(lernplanTab==='week')renderWeekCalendar();
+  document.getElementById('wpt-time').value='';document.getElementById('wpt-label').value='';
   toast('Slot zur Vorlage hinzugefügt');
 }
-function deleteWeekPlanTemplateSlot(id) {
-  data.weekPlanSlots = data.weekPlanSlots.filter(s => s.id !== id);
-  saveToLocal(); renderWeekPlanTemplateList();
-  if (lernplanTab === 'week') renderWeekCalendar();
+function deleteWeekPlanTemplateSlot(id){
+  data.weekPlanSlots=data.weekPlanSlots.filter(s=>s.id!==id);
+  saveToLocal();renderWeekPlanTemplateList();
+  if(lernplanTab==='week')renderWeekCalendar();
 }
-function syncDayWithTemplate(dateStr) {
-  const dateObj = new Date(dateStr + 'T00:00:00');
-  if (isNaN(dateObj)) return false;
-  const dayName = WEEKDAY_NAMES[dateObj.getDay()];
-  const templateSlots = data.weekPlanSlots.filter(s => s.day === dayName).sort((a, b) => a.time.localeCompare(b.time));
-  const existing = data.weekPlanDays[dateStr] || [];
-  let added = false;
-  templateSlots.forEach(t => {
-    const exists = existing.some(s => s.time === t.time && s.type === t.type && s.label === t.label);
-    if (!exists) {
-      existing.push({ id: Date.now().toString() + Math.random().toString(36).slice(2), time: t.time, type: t.type, label: t.label, subject: null, done: false, shifted: false });
-      added = true;
-    }
-  });
-  if (added) {
-    existing.sort((a, b) => a.time.localeCompare(b.time));
-    data.weekPlanDays[dateStr] = existing;
-  }
-  return added;
-}
-function ensureDayGenerated(dateStr) {
-  const dateObj = new Date(dateStr + 'T00:00:00');
-  if (isNaN(dateObj)) return false;
-  const dayName = WEEKDAY_NAMES[dateObj.getDay()];
-  const templateSlots = data.weekPlanSlots.filter(s => s.day === dayName).sort((a,b) => a.time.localeCompare(b.time));
-  if (!data.weekPlanDays[dateStr] || !data.weekPlanDays[dateStr].length) {
-    data.weekPlanDays[dateStr] = templateSlots.map(s => ({
-      id: Date.now().toString() + Math.random().toString(36).slice(2),
-      time: s.time, type: s.type, label: s.label,
-      subject: null, done: false, shifted: false
-    }));
+function ensureDayGenerated(dateStr){
+  const dateObj=new Date(dateStr+'T00:00:00');
+  if(isNaN(dateObj))return false;
+  const dayName=WEEKDAY_NAMES[dateObj.getDay()];
+  const templateSlots=data.weekPlanSlots.filter(s=>s.day===dayName).sort((a,b)=>a.time.localeCompare(b.time));
+  if(!data.weekPlanDays[dateStr]||!data.weekPlanDays[dateStr].length){
+    data.weekPlanDays[dateStr]=templateSlots.map(s=>({id:Date.now().toString()+Math.random().toString(36).slice(2),time:s.time,type:s.type,label:s.label,subject:null,done:false,shifted:false}));
     return true;
   }
-  return syncDayWithTemplate(dateStr);
+  let added=false;
+  const existing=data.weekPlanDays[dateStr];
+  templateSlots.forEach(t=>{
+    const exists=existing.some(s=>s.time===t.time&&s.type===t.type&&s.label===t.label);
+    if(!exists){existing.push({id:Date.now().toString()+Math.random().toString(36).slice(2),time:t.time,type:t.type,label:t.label,subject:null,done:false,shifted:false});added=true;}
+  });
+  if(added){existing.sort((a,b)=>a.time.localeCompare(b.time));}
+  return added;
 }
-function renderWeekPlanTemplateList() {
-  const container = document.getElementById('wpt-list');
-  const days = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
-  if (!data.weekPlanSlots.length) { container.innerHTML = '<div class="empty-state">Noch keine Vorlagen-Slots definiert</div>'; return; }
-  container.innerHTML = days.map(day => {
-    const items = data.weekPlanSlots.filter(s => s.day === day);
-    if (!items.length) return '';
-    return `<div style="margin-bottom:10px;"><div style="font-size:12px; color:var(--accent); margin-bottom:4px;">${day}</div>` +
-      items.map(s => `<div class="schedule-item" style="cursor:default; display:flex; justify-content:space-between; align-items:center;">
-        <span><strong>${escapeHtml(s.label)}</strong><br><span class="schedule-period">${escapeHtml(s.time)}</span></span>
+function renderWeekPlanTemplateList(){
+  const container=document.getElementById('wpt-list');
+  const days=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
+  if(!data.weekPlanSlots.length){container.innerHTML='<div class="empty-state">Noch keine Vorlagen-Slots</div>';return;}
+  container.innerHTML=days.map(day=>{
+    const items=data.weekPlanSlots.filter(s=>s.day===day);
+    if(!items.length)return'';
+    return`<div style="margin-bottom:10px;"><div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:4px;">${day}</div>`+
+      items.map(s=>`<div class="schedule-slot" style="cursor:default;display:flex;justify-content:space-between;align-items:center;">
+        <span><strong>${escapeHtml(s.label)}</strong><br><span class="slot-time">${escapeHtml(s.time)}</span></span>
         <button class="btn small danger" onclick="deleteWeekPlanTemplateSlot('${s.id}')">✕</button>
-      </div>`).join('') + `</div>`;
+      </div>`).join('')+`</div>`;
   }).join('');
 }
-
-function regenerateFromTemplate() {
-  if (!confirm('Der sichtbare Kalender wird für aktuelle und zukünftige Wochen neu aus der Vorlage generiert. Bereits individuell bearbeitete Tage in der Vergangenheit bleiben erhalten, zukünftige leere Tage werden neu befüllt. Fortfahren?')) return;
+function regenerateFromTemplate(){
+  if(!confirm('Der Kalender wird für aktuelle und zukünftige Wochen neu aus der Vorlage generiert. Bereits bearbeitete Tage in der Vergangenheit bleiben erhalten. Fortfahren?'))return;
   closeWeekPlanTemplateModal();
-  Object.keys(data.weekPlanDays).sort().forEach(dateStr => ensureDayGenerated(dateStr));
-  if (!currentWeekStart) currentWeekStart = getMonday(new Date());
-  renderWeekCalendar();
-  toast('Kalender aktualisiert');
+  Object.keys(data.weekPlanDays).sort().forEach(dateStr=>ensureDayGenerated(dateStr));
+  if(!currentWeekStart)currentWeekStart=getMonday(new Date());
+  renderWeekCalendar();toast('Kalender aktualisiert');
 }
 
-// ── Wochenkalender ────────────────────────────────────────────────
-function shiftWeekView(delta) {
-  currentWeekStart = addDays(currentWeekStart, delta * 7);
+// ── Wochenkalender ──
+function shiftWeekView(delta){
+  currentWeekStart=addDays(currentWeekStart,delta*7);
   renderWeekCalendar();
 }
-function jumpToTodayWeek() { currentWeekStart = getMonday(new Date()); renderWeekCalendar(); }
-
-function renderWeekCalendar() {
-  if (!currentWeekStart) currentWeekStart = getMonday(new Date());
-  const container = document.getElementById('week-calendar');
-  const todayStr = fmtDate(new Date());
-  const weekEnd = addDays(currentWeekStart, 6);
-  document.getElementById('week-range-label').textContent = `${fmtDate(currentWeekStart)} – ${fmtDate(weekEnd)}`;
-
-  let html = '';
-  let weekDates = [];
-  let changed = false;
-  for (let i = 0; i < 7; i++) {
-    const d = addDays(currentWeekStart, i);
-    const dateStr = fmtDate(d);
-    weekDates.push(dateStr);
-    if (ensureDayGenerated(dateStr)) changed = true;
+function jumpToTodayWeek(){currentWeekStart=getMonday(new Date());renderWeekCalendar();}
+function renderWeekCalendar(){
+  if(!currentWeekStart)currentWeekStart=getMonday(new Date());
+  const container=document.getElementById('week-calendar');
+  const todayStr=fmtDate(new Date());
+  const weekEnd=addDays(currentWeekStart,6);
+  document.getElementById('week-range-label').textContent=`${fmtDate(currentWeekStart)} – ${fmtDate(weekEnd)}`;
+  let html='';let weekDates=[];let changed=false;
+  for(let i=0;i<7;i++){
+    const d=addDays(currentWeekStart,i);
+    const dateStr=fmtDate(d);weekDates.push(dateStr);
+    if(ensureDayGenerated(dateStr))changed=true;
   }
-  if (assignSubjectsToSlots(weekDates)) changed = true;
-  if (changed) saveToLocal();
-
-  for (let i = 0; i < 7; i++) {
-    const d = addDays(currentWeekStart, i);
-    const dateStr = fmtDate(d);
-    const slots = data.weekPlanDays[dateStr] || [];
-    const dayName = WEEKDAY_NAMES[d.getDay()];
-    const isToday = dateStr === todayStr;
-    html += `<div class="schedule-day week-day-col"><h4 class="${isToday ? 'today' : ''}">${dayName}<br><span style="font-size:11px; font-weight:400; color:var(--ink-2);">${dateStr}</span></h4>`;
-    if (!slots.length) {
-      html += `<div style="color:var(--ink-2); padding:8px; font-size:12px;">— keine Slots —</div>`;
-    } else {
-      html += slots.map(s => {
-        const label = s.type === 'rechtsgebiet' ? (s.subject ? `Nacharbeiten: ${escapeHtml(s.subject)}` : 'Rechtsgebiet nacharbeiten (Warteschlange leer)') : escapeHtml(s.label);
-        return `<div class="week-slot type-${s.type} ${s.done ? 'slot-done' : ''}" onclick="openSlotDetail('${dateStr}','${s.id}')">
-          ${s.shifted ? '<span class="slot-shifted-badge" title="verschoben">↷</span>' : ''}
+  assignSubjectsToSlots(weekDates);
+  if(changed)saveToLocal();
+  for(let i=0;i<7;i++){
+    const d=addDays(currentWeekStart,i);
+    const dateStr=fmtDate(d);
+    const slots=data.weekPlanDays[dateStr]||[];
+    const dayName=WEEKDAY_NAMES[d.getDay()];
+    const isToday=dateStr===todayStr;
+    html+=`<div class="schedule-day week-day-col"><h4 ${isToday?'style="color:var(--accent);"':''}>${dayName}<span class="day-date">${dateStr}</span></h4>`;
+    if(!slots.length){html+=`<div style="color:var(--ink-tertiary);padding:8px;font-size:12px;">— keine Slots —</div>`;}
+    else{
+      html+=slots.map(s=>{
+        const label=s.type==='rechtsgebiet'?(s.subject?`Nacharbeiten: ${escapeHtml(s.subject)}`:'Rechtsgebiet nacharbeiten (Warteschlange leer)'):escapeHtml(s.label);
+        return`<div class="week-slot type-${s.type} ${s.done?'slot-done':''}" onclick="openSlotDetail('${dateStr}','${s.id}')">
+          ${s.shifted?'<span class="slot-shifted-badge" title="verschoben">↷</span>':''}
           <div class="slot-time">${escapeHtml(s.time)}</div>
-          <div class="slot-label">${label}</div>
+          <div class="slot-label" style="font-weight:600;">${label}</div>
         </div>`;
       }).join('');
     }
-    html += `</div>`;
+    html+=`</div>`;
   }
-  container.innerHTML = html;
+  container.innerHTML=html;
 }
 
-// Beim ersten Rendern eines "rechtsgebiet"-Slots das nächste Fach aus der Queue ziehen (nur einmal, lazy)
-function assignSubjectIfNeeded(dateStr, slotId) {
-  // Aktualisierung durch Woche rendern, damit aktuelle Queue-Reihenfolge und bereits
-  // zugewiesene Termine konsistent bleiben.
-  assignSubjectsToSlots([dateStr]);
-  saveToLocal();
-}
-
-// ── Slot Detail / Bearbeiten ──────────────────────────────────────
-let currentSlotDate = null, currentSlotId = null;
-function openSlotDetail(dateStr, slotId) {
-  assignSubjectIfNeeded(dateStr, slotId);
-  saveToLocal();
-  currentSlotDate = dateStr; currentSlotId = slotId;
-  const slot = data.weekPlanDays[dateStr]?.find(s => s.id === slotId);
-  if (!slot) return;
-  document.getElementById('slot-detail-info').textContent = `${dateStr} · ${WEEKDAY_NAMES[new Date(dateStr+'T00:00:00').getDay()]}`;
-  document.getElementById('slot-m-time').value = slot.time;
-  document.getElementById('slot-m-type').value = slot.type;
-  document.getElementById('slot-m-label').value = slot.type === 'rechtsgebiet' ? (slot.subject || '') : slot.label;
-  document.getElementById('slot-m-done').checked = !!slot.done;
+// ── Slot Detail ──
+let currentSlotDate=null,currentSlotId=null;
+function openSlotDetail(dateStr,slotId){
+  currentSlotDate=dateStr;currentSlotId=slotId;
+  const slot=data.weekPlanDays[dateStr]?.find(s=>s.id===slotId);
+  if(!slot)return;
+  document.getElementById('slot-detail-info').textContent=`${dateStr} · ${WEEKDAY_NAMES[new Date(dateStr+'T00:00:00').getDay()]}`;
+  document.getElementById('slot-m-time').value=slot.time;
+  document.getElementById('slot-m-type').value=slot.type;
+  document.getElementById('slot-m-label').value=slot.type==='rechtsgebiet'?(slot.subject||''):slot.label;
+  document.getElementById('slot-m-done').checked=!!slot.done;
   toggleSlotLabelField();
-  document.getElementById('slot-detail-modal').classList.remove('hidden');
-  renderWeekCalendar();
+  openModal('slot-detail-modal');
+  renderWeekCalendar();renderSubjectQueue();
 }
-function toggleSlotLabelField() {
-  const type = document.getElementById('slot-m-type').value;
-  document.getElementById('slot-m-label-wrap').textContent = type === 'rechtsgebiet' ? 'Zugewiesenes Rechtsgebiet' : 'Bezeichnung';
+function toggleSlotLabelField(){
+  const type=document.getElementById('slot-m-type').value;
+  document.getElementById('slot-m-label-wrap').textContent=type==='rechtsgebiet'?'Zugewiesenes Rechtsgebiet':'Bezeichnung';
 }
-function closeSlotDetailModal() { document.getElementById('slot-detail-modal').classList.add('hidden'); currentSlotDate = null; currentSlotId = null; }
-
-function saveSlotDetail() {
-  const slot = data.weekPlanDays[currentSlotDate]?.find(s => s.id === currentSlotId);
-  if (!slot) return;
-  const wasDone = slot.done;
-  slot.time = document.getElementById('slot-m-time').value.trim();
-  slot.type = document.getElementById('slot-m-type').value;
-  const nowDone = document.getElementById('slot-m-done').checked;
-  if (slot.type === 'rechtsgebiet') {
-    slot.subject = document.getElementById('slot-m-label').value.trim() || slot.subject;
-  } else {
-    slot.label = document.getElementById('slot-m-label').value.trim() || TYPE_LABELS[slot.type];
+function closeSlotDetailModal(){closeModal('slot-detail-modal');currentSlotDate=null;currentSlotId=null;}
+function saveSlotDetail(){
+  const slot=data.weekPlanDays[currentSlotDate]?.find(s=>s.id===currentSlotId);
+  if(!slot)return;
+  const wasDone=slot.done;
+  slot.time=document.getElementById('slot-m-time').value.trim();
+  slot.type=document.getElementById('slot-m-type').value;
+  const nowDone=document.getElementById('slot-m-done').checked;
+  if(slot.type==='rechtsgebiet'){
+    slot.subject=document.getElementById('slot-m-label').value.trim()||slot.subject;
+  }else{
+    slot.label=document.getElementById('slot-m-label').value.trim()||TYPE_LABELS[slot.type];
   }
-  // Wenn frisch als erledigt markiert und es ein Rechtsgebiets-Slot ist -> Einheit aus Queue verbrauchen
-  if (!wasDone && nowDone && slot.type === 'rechtsgebiet') {
-    const consumed = consumeSubjectUnit(slot.subject);
-    if (consumed) slot.subject = consumed;
+  if(!wasDone&&nowDone&&slot.type==='rechtsgebiet'){
+    const consumed=consumeSubjectUnit(slot.subject);
+    if(consumed)slot.subject=consumed;
   }
-  // Wenn erledigt rückgängig gemacht wird -> Einheit zurückgeben
-  if (wasDone && !nowDone && slot.type === 'rechtsgebiet') {
+  if(wasDone&&!nowDone&&slot.type==='rechtsgebiet'){
     refundSubjectUnit(slot.subject);
   }
-  slot.done = nowDone;
-  // sort slots of day by time
-  data.weekPlanDays[currentSlotDate].sort((a,b) => a.time.localeCompare(b.time));
-  saveToLocal(); closeSlotDetailModal(); renderWeekCalendar(); renderSubjectQueue();
+  slot.done=nowDone;
+  data.weekPlanDays[currentSlotDate].sort((a,b)=>a.time.localeCompare(b.time));
+  saveToLocal();closeSlotDetailModal();renderWeekCalendar();renderSubjectQueue();
   toast('Gespeichert');
 }
 
-// ── Verschieben-Logik ("nicht geschafft") ────────────────────────
-// Verschiebt den aktuellen Slot + alle nachfolgenden Slots (auf allen Folgetagen)
-// jeweils um EINE Position nach hinten (Kartenstapel-Prinzip), beginnend beim aktuellen Slot.
-function markSlotNotDoneAndShift() {
-  if (!currentSlotDate || !currentSlotId) return;
-  if (!confirm('Dieser Slot und alle nachfolgenden Termine rutschen jeweils einen Slot nach hinten. Fortfahren?')) return;
-
-  // 1. Flache Liste aller Slots ab dem aktuellen Zeitpunkt aufbauen, über Tagesgrenzen hinweg.
-  //    Wir arbeiten mit den bereits generierten Tagen und generieren bei Bedarf weitere Tage,
-  //    damit am Ende der Liste ein freier Platz entsteht.
-  const dates = Object.keys(data.weekPlanDays).sort();
-  const startIdx = dates.indexOf(currentSlotDate);
-  if (startIdx === -1) return;
-
-  // Sicherstellen, dass genug Folgetage existieren (7 Tage Puffer über den letzten bereits
-  // generierten Tag hinaus reichen, da an einem Vorlagentag i.d.R. mehrere Slots existieren
-  // und die Kette dadurch schon nach wenigen Tagen endet).
-  let lastDate = new Date(dates[dates.length - 1] + 'T00:00:00');
-  for (let i = 1; i <= 7; i++) {
-    const d = addDays(lastDate, i);
-    ensureDayGenerated(fmtDate(d));
+// ── Verschieben (Kartenstapel) ──
+function markSlotNotDoneAndShift(){
+  if(!currentSlotDate||!currentSlotId)return;
+  if(!confirm('Dieser Slot und alle nachfolgenden Termine rutschen jeweils einen Slot nach hinten. Fortfahren?'))return;
+  const dates=Object.keys(data.weekPlanDays).sort();
+  const startIdx=dates.indexOf(currentSlotDate);
+  if(startIdx===-1)return;
+  let lastDate=new Date(dates[dates.length-1]+'T00:00:00');
+  for(let i=1;i<=7;i++){const d=addDays(lastDate,i);ensureDayGenerated(fmtDate(d));}
+  const allDates=Object.keys(data.weekPlanDays).sort();
+  const fromIdx=allDates.indexOf(currentSlotDate);
+  const flat=[];
+  data.weekPlanDays[currentSlotDate].forEach(s=>flat.push({dateStr:currentSlotDate,slot:s}));
+  const currentSlotPos=flat.findIndex(f=>f.slot.id===currentSlotId);
+  const tail=flat.slice(currentSlotPos);
+  let sequence=[...tail];
+  for(let i=fromIdx+1;i<allDates.length;i++){
+    const d=allDates[i];
+    data.weekPlanDays[d].forEach(s=>sequence.push({dateStr:d,slot:s}));
   }
-  const allDates = Object.keys(data.weekPlanDays).sort();
-  const fromIdx = allDates.indexOf(currentSlotDate);
-
-  // 2. Flache Sequenz: für jeden Tag ab fromIdx, alle Slots ab (bzw. inkl.) dem markierten Slot mitnehmen;
-  //    für den aktuellen Tag: nur Slots ab dem aktuellen Slot (inklusive); für Folgetage: alle Slots.
-  const flat = []; // { dateStr, slotRef }
-  data.weekPlanDays[currentSlotDate].forEach(s => {
-    flat.push({ dateStr: currentSlotDate, slot: s });
-  });
-  const currentSlotPos = flat.findIndex(f => f.slot.id === currentSlotId);
-  const tail = flat.slice(currentSlotPos); // ab dem markierten Slot (inkl.) für heute
-  let sequence = [...tail];
-  for (let i = fromIdx + 1; i < allDates.length; i++) {
-    const d = allDates[i];
-    data.weekPlanDays[d].forEach(s => sequence.push({ dateStr: d, slot: s }));
+  const contents=sequence.map(f=>({type:f.slot.type,label:f.slot.label,subject:f.slot.subject,done:f.slot.done,shifted:f.slot.shifted}));
+  for(let i=sequence.length-1;i>0;i--){
+    sequence[i].slot.type=contents[i-1].type;
+    sequence[i].slot.label=contents[i-1].label;
+    sequence[i].slot.subject=contents[i-1].subject;
+    sequence[i].slot.done=contents[i-1].done;
+    sequence[i].slot.shifted=contents[i-1].shifted;
   }
-
-  // 3. Rotation: jeder Slot-INHALT rutscht eine Position weiter in der Sequenz (Zeit/Typ/Label bleiben am Platz,
-  //    aber Inhalt = type/label/subject/done wandert). Der erste Platz (der markierte Slot) wird mit dem Inhalt
-  //    des vorherigen Elements der Sequenz überschrieben -> praktisch heißt das: wir schieben den Inhalt aller
-  //    Elemente um 1 nach hinten und der erste Slot wird frei/leer (neuer, unbelegter Slot-Typ "frei").
-  const contents = sequence.map(f => ({ type: f.slot.type, label: f.slot.label, subject: f.slot.subject, done: f.slot.done, shifted: f.slot.shifted }));
-  // Der ursprüngliche Slot wird frei, alle folgenden Einträge rücken nach hinten.
-  for (let i = sequence.length - 1; i > 0; i--) {
-    sequence[i].slot.type = contents[i-1].type;
-    sequence[i].slot.label = contents[i-1].label;
-    sequence[i].slot.subject = contents[i-1].subject;
-    sequence[i].slot.done = contents[i-1].done;
-    sequence[i].slot.shifted = contents[i-1].shifted;
-  }
-  const first = sequence[0].slot;
-  first.type = 'frei';
-  first.label = TYPE_LABELS.frei;
-  first.subject = null;
-  first.done = false;
-  first.shifted = true;
-
-  const targetDateStr = sequence[sequence.length - 1].dateStr;
-  saveToLocal();
-  closeSlotDetailModal();
-  currentWeekStart = getMonday(new Date(targetDateStr + 'T00:00:00'));
-  renderWeekCalendar();
-  renderSubjectQueue();
-  toast(`Verschoben — der Termin ist jetzt am ${targetDateStr} eingeplant`);
+  const first=sequence[0].slot;
+  first.type='frei';first.label=TYPE_LABELS.frei;first.subject=null;first.done=false;first.shifted=true;
+  const targetDateStr=sequence[sequence.length-1].dateStr;
+  saveToLocal();closeSlotDetailModal();
+  currentWeekStart=getMonday(new Date(targetDateStr+'T00:00:00'));
+  renderWeekCalendar();renderSubjectQueue();
+  toast(`Verschoben – Termin jetzt am ${targetDateStr}`);
 }
 
-// ── Notes ─────────────────────────────────────────────────────────
-function renderNotesList() { let notes = data.notes; if(noteFilter) notes = notes.filter(n => (n.title||'').toLowerCase().includes(noteFilter)); const container = document.getElementById('notes-list'); if(!notes.length) { container.innerHTML = '<div style="padding:20px;color:var(--ink-2);">Keine Notizen</div>'; return; } container.innerHTML = notes.map(n => `<div class="note-item ${currentNote && currentNote.id===n.id ? 'active' : ''}" onclick="openNote('${n.id}')"><div class="note-item-title">${escapeHtml(n.title || 'Ohne Titel')}</div></div>`).join(''); }
-function filterNotes(val) { noteFilter = val.toLowerCase(); renderNotesList(); }
-function newNote() { const n = { id: Date.now().toString(), title: '', body: '', tags: [], date: new Date().toLocaleDateString('de-DE') }; data.notes.unshift(n); saveToLocal(); openNote(n.id); renderNotesList(); }
-function openNote(id) { currentNote = data.notes.find(n => n.id === id); if(!currentNote) return; document.getElementById('note-content-area').style.display = 'flex'; document.querySelector('.note-editor-toolbar').innerHTML = `<span style="font-size:12px;color:var(--ink-2);">${currentNote.date || ''}</span>`; document.getElementById('note-title').value = currentNote.title || ''; document.getElementById('note-body').value = currentNote.body || ''; renderResearchTags(); renderNotesList(); }
-function saveNoteDebounced() { if(!currentNote) return; currentNote.title = document.getElementById('note-title').value; currentNote.body = document.getElementById('note-body').value; clearTimeout(saveTimer); saveTimer = setTimeout(() => { saveToLocal(); document.getElementById('note-saved-hint').textContent = 'gespeichert ✓'; setTimeout(() => { if(document.getElementById('note-saved-hint')) document.getElementById('note-saved-hint').textContent = ''; }, 1500); }, 600); }
-function extractTagsFromBody() { if(!currentNote) return; const body = document.getElementById('note-body').value; const found = [...body.matchAll(/#(\w+)/g)].map(m => m[1]); currentNote.tags = [...new Set(found)]; renderResearchTags(); }
-function renderResearchTags() { const area = document.getElementById('research-tags-list'); if(!area) return; const tags = currentNote ? (currentNote.tags || []) : []; area.innerHTML = tags.map((t,i) => `<div class="research-tag">${escapeHtml(t)}<button onclick="removeTag(${i})" style="background:none; border:none; color:var(--accent-2); cursor:pointer;">×</button></div>`).join(''); }
-function removeTag(i) { if(currentNote) { currentNote.tags.splice(i,1); saveToLocal(); renderResearchTags(); } }
-function deleteCurrentNote() { if(currentNote && confirm('Notiz löschen?')) { data.notes = data.notes.filter(n => n.id !== currentNote.id); currentNote = null; document.getElementById('note-content-area').style.display = 'none'; document.querySelector('.note-editor-toolbar').innerHTML = '<span style="font-size:12px;color:var(--ink-2);">Notiz auswählen oder neu erstellen</span>'; saveToLocal(); renderNotesList(); toast('Gelöscht'); } }
+// ── Notes ──
+function renderNotesList(){
+  let notes=data.notes;
+  if(noteFilter)notes=notes.filter(n=>(n.title||'').toLowerCase().includes(noteFilter));
+  const container=document.getElementById('notes-list');
+  if(!notes.length){container.innerHTML='<div style="padding:20px;color:var(--ink-tertiary);">Keine Notizen</div>';return;}
+  container.innerHTML=notes.map(n=>`<div class="note-list-item ${currentNote&&currentNote.id===n.id?'active':''}" onclick="openNote('${n.id}')"><div class="note-list-title">${escapeHtml(n.title||'Ohne Titel')}</div><div class="note-list-date">${n.date||''}</div></div>`).join('');
+}
+function filterNotes(val){noteFilter=val.toLowerCase();renderNotesList();}
+function newNote(){
+  const n={id:Date.now().toString(),title:'',body:'',tags:[],date:new Date().toLocaleDateString('de-DE')};
+  data.notes.unshift(n);saveToLocal();openNote(n.id);renderNotesList();
+}
+function openNote(id){
+  currentNote=data.notes.find(n=>n.id===id);if(!currentNote)return;
+  document.getElementById('note-content-area').style.display='flex';
+  document.querySelector('.note-editor-toolbar').innerHTML=`<span style="font-size:12px;color:var(--ink-tertiary);">${currentNote.date||''}</span>`;
+  document.getElementById('note-title').value=currentNote.title||'';
+  document.getElementById('note-body').value=currentNote.body||'';
+  renderResearchTags();renderNotesList();
+}
+function saveNoteDebounced(){
+  if(!currentNote)return;
+  currentNote.title=document.getElementById('note-title').value;
+  currentNote.body=document.getElementById('note-body').value;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    saveToLocal();
+    document.getElementById('note-saved-hint').textContent='gespeichert ✓';
+    setTimeout(()=>{const el=document.getElementById('note-saved-hint');if(el)el.textContent='';},1500);
+  },600);
+}
+function extractTagsFromBody(){
+  if(!currentNote)return;
+  const body=document.getElementById('note-body').value;
+  const found=[...body.matchAll(/#(\w+)/g)].map(m=>m[1]);
+  currentNote.tags=[...new Set(found)];
+  renderResearchTags();
+}
+function renderResearchTags(){
+  const area=document.getElementById('research-tags-list');
+  if(!area)return;
+  const tags=currentNote?(currentNote.tags||[]):[];
+  area.innerHTML=tags.map((t,i)=>`<div class="tag accent">${escapeHtml(t)}<button onclick="removeTag(${i})" style="background:none;border:none;color:var(--accent);cursor:pointer;margin-left:4px;font-weight:700;">×</button></div>`).join('');
+}
+function removeTag(i){if(currentNote){currentNote.tags.splice(i,1);saveToLocal();renderResearchTags();}}
+function deleteCurrentNote(){
+  if(currentNote&&confirm('Notiz löschen?')){
+    data.notes=data.notes.filter(n=>n.id!==currentNote.id);
+    currentNote=null;
+    document.getElementById('note-content-area').style.display='none';
+    document.querySelector('.note-editor-toolbar').innerHTML='<span style="font-size:12px;color:var(--ink-tertiary);">Notiz auswählen oder neu erstellen</span>';
+    saveToLocal();renderNotesList();toast('Gelöscht');
+  }
+}
 
-// ── Todos ─────────────────────────────────────────────────────────
-function populateTodoSubject() { const subjects = [...new Set(data.lectures.map(l=>l.subject).filter(Boolean))]; const sel = document.getElementById('todo-subject'); if(sel) sel.innerHTML = '<option value="">Kein Fach</option>' + subjects.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join(''); }
-function addTodo() { const val = document.getElementById('todo-input').value.trim(); if(!val) return; data.todos.push({ id: Date.now().toString(), text: val, subject: document.getElementById('todo-subject').value, prio: document.getElementById('todo-prio').value, done: false, date: new Date().toLocaleDateString() }); document.getElementById('todo-input').value = ''; saveToLocal(); renderTodos(); toast('Aufgabe hinzugefügt'); }
-function renderTodos() { let todos = [...data.todos]; if(todoFilter === 'open') todos = todos.filter(t=>!t.done); if(todoFilter === 'done') todos = todos.filter(t=>t.done); todos.sort((a,b) => { if(a.done!==b.done) return a.done?1:-1; if(a.prio!==b.prio) return a.prio==='high'?-1:1; return 0; }); const container = document.getElementById('todo-list'); if(!todos.length) { container.innerHTML = '<div class="empty-state">✅ Keine Aufgaben</div>'; return; } container.innerHTML = todos.map(t => `<div class="lecture-card ${t.done ? 'done' : ''}" onclick="showTodoDetail('${t.id}')"><div style="display:flex; align-items:center;"><div class="lec-check ${t.done ? 'checked' : ''}" onclick="event.stopPropagation(); toggleTodo('${t.id}')"></div><div class="lec-body"><div class="lec-title">${escapeHtml(t.text)}</div><div class="lec-meta">${t.subject ? escapeHtml(t.subject)+' · ' : ''}${t.date||''}</div>${t.prio==='high'?'<div class="lec-tags"><span class="tag prio">hohe Priorität</span></div>':''}${t.done?'<div class="lec-tags"><span class="tag done-tag">erledigt</span></div>':''}</div><div class="lec-actions"><button class="btn small danger" onclick="event.stopPropagation(); deleteTodo(\''+t.id+'\')">✕</button></div></div></div>`).join(''); }
-function toggleTodo(id) { const t = data.todos.find(x=>x.id===id); if(t) { t.done = !t.done; saveToLocal(); renderTodos(); updateDash(); } }
-function deleteTodo(id) { data.todos = data.todos.filter(x=>x.id!==id); saveToLocal(); renderTodos(); toast('Gelöscht'); }
-function setTodoFilter(btn,val) { todoFilter=val; document.querySelectorAll('.filter-btn[data-tf]').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderTodos(); }
+// ── Todos ──
+function populateTodoSubject(){
+  const subjects=[...new Set(data.lectures.map(l=>l.subject).filter(Boolean))];
+  const sel=document.getElementById('todo-subject');
+  if(sel)sel.innerHTML='<option value="">Kein Fach</option>'+subjects.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+}
+function addTodo(){
+  const val=document.getElementById('todo-input').value.trim();
+  if(!val)return;
+  data.todos.push({id:Date.now().toString(),text:val,subject:document.getElementById('todo-subject').value,prio:document.getElementById('todo-prio').value,done:false,date:new Date().toLocaleDateString('de-DE')});
+  document.getElementById('todo-input').value='';
+  saveToLocal();renderTodos();toast('Aufgabe hinzugefügt');
+}
+function renderTodos(){
+  let todos=[...data.todos];
+  if(todoFilter==='open')todos=todos.filter(t=>!t.done);
+  if(todoFilter==='done')todos=todos.filter(t=>t.done);
+  todos.sort((a,b)=>{if(a.done!==b.done)return a.done?1:-1;if(a.prio!==b.prio)return a.prio==='high'?-1:1;return 0;});
+  const container=document.getElementById('todo-list');
+  if(!todos.length){container.innerHTML='<div class="empty-state"><div class="empty-state-icon">✅</div>Keine Aufgaben</div>';return;}
+  container.innerHTML=todos.map(t=>`<div class="list-item ${t.done?'done':''}" onclick="showTodoDetail('${t.id}')">
+    <div class="item-check ${t.done?'checked':''}" onclick="event.stopPropagation();toggleTodo('${t.id}')"></div>
+    <div class="item-body">
+      <div class="item-title">${escapeHtml(t.text)}</div>
+      <div class="item-meta">${t.subject?escapeHtml(t.subject)+' · ':''}${t.date||''}</div>
+      ${t.prio==='high'?'<div class="item-tags"><span class="tag danger">hohe Priorität</span></div>':''}
+      ${t.done?'<div class="item-tags"><span class="tag success">erledigt</span></div>':''}
+    </div>
+    <div class="item-actions"><button class="btn small danger" onclick="event.stopPropagation();deleteTodo('${t.id}')">✕</button></div>
+  </div>`).join('');
+}
+function toggleTodo(id){
+  const t=data.todos.find(x=>x.id===id);
+  if(t){t.done=!t.done;saveToLocal();renderTodos();updateDash();}
+}
+function deleteTodo(id){data.todos=data.todos.filter(x=>x.id!==id);saveToLocal();renderTodos();toast('Gelöscht');}
+function setTodoFilter(btn,val){todoFilter=val;document.querySelectorAll('.chip[data-tf]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTodos();}
 
-// ── Modal close on backdrop click ────────────────────────────────
-document.getElementById('lec-modal').addEventListener('click', e => { if(e.target === document.getElementById('lec-modal')) closeLecModal(); });
-document.getElementById('detail-modal').addEventListener('click', e => { if(e.target === document.getElementById('detail-modal')) closeDetailModal(); });
-document.getElementById('schedule-modal').addEventListener('click', e => { if(e.target === document.getElementById('schedule-modal')) closeScheduleModal(); });
-document.getElementById('import-modal').addEventListener('click', e => { if(e.target === document.getElementById('import-modal')) closeImportModal(); });
+// ── Modal backdrop clicks ──
+['lec-modal','detail-modal','schedule-modal','subject-queue-modal','weekplan-template-modal','slot-detail-modal','import-modal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{if(e.target===document.getElementById(id)){closeModal(id);if(id==='lec-modal')lecEditId=null;if(id==='detail-modal'){currentDetailId=null;currentDetailType=null;}}});
+});
 
-// ── Init ──────────────────────────────────────────────────────────
-renderLectures(); renderSchedule(); renderTodos(); updateDash();
-    currentWeekStart = getMonday(new Date());
-
+// ── Init ──
+renderLectures();renderSchedule();renderTodos();updateDash();
+currentWeekStart=getMonday(new Date());
 </script>
 </body>
 </html>
