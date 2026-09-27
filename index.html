@@ -457,6 +457,7 @@
     <label>Name der Klasse</label><input id="class-name" maxlength="100" placeholder="z. B. Jura-Rechtsgebiete">
     <label>Beschreibung</label><textarea id="class-description" rows="2" placeholder="Wiederkehrende Lernreihe beschreiben (optional)"></textarea>
     <label>Farbe</label><input type="color" id="class-color" class="lp-color-input" value="#f3d8cb">
+    <label class="checkbox-label" style="margin-top:16px;"><input type="checkbox" id="class-loop"> Zyklus wiederholen, wenn alle Teilaufgaben durchlaufen sind</label>
     <div class="flex items-center justify-between" style="margin-top:20px;margin-bottom:8px;">
       <strong>Teilaufgaben</strong><button class="btn small" onclick="addClassTaskRow()">＋ Teilaufgabe</button>
     </div>
@@ -1311,6 +1312,7 @@ function migrateLearningPlanData() {
     cls.name = String(cls.name || 'Unbenannte Klasse');
     cls.description = String(cls.description || '');
     cls.color = /^#[0-9a-f]{6}$/i.test(String(cls.color || '')) ? cls.color : '#f3d8cb';
+    cls.loop = !!cls.loop;
     if (!Array.isArray(cls.tasks)) cls.tasks = [];
     cls.tasks.forEach(task => {
       task.id = makeSafeId(task.id,'task');
@@ -1424,6 +1426,15 @@ function lpTaskProgressDisplay(task) {
   const currentUnit = Math.min(task.units, Math.max(1, (Number(task.completedUnits) || 0) + 1));
   return `${currentUnit}/${task.units}`;
 }
+function lpClassLoopCompleted(cls) {
+  if (!cls || !Array.isArray(cls.tasks) || !cls.tasks.length || !cls.loop) return false;
+  return cls.tasks.every(task => (Number(task.completedUnits) || 0) >= (Number(task.units) || 1));
+}
+function lpResetClassLoop(cls) {
+  if (!lpClassLoopCompleted(cls)) return false;
+  cls.tasks.forEach(task => { task.completedUnits = 0; });
+  return true;
+}
 function lpTaskForUnit(cls, unitIndex) {
   let remainingIndex = unitIndex;
   for (const task of cls.tasks) {
@@ -1446,6 +1457,7 @@ function lpRefreshAssignments() {
   });
   occurrences.sort((a,b) => a.dateStr.localeCompare(b.dateStr) || lpTimeMinutes(a.block.startTime) - lpTimeMinutes(b.block.startTime));
   data.weekPlanClasses.forEach(cls => {
+    lpResetClassLoop(cls);
     let unitIndex = 0;
     occurrences.filter(occurrence => occurrence.cls.id === cls.id).forEach(({item}) => {
       if (item.done) return;
@@ -1746,6 +1758,7 @@ function completeOccurrence(dateStr,blockId) {
   if (!block || !occurrence || !cls || !task || occurrence.done) return;
   if (task.completedUnits >= task.units) { lpRefreshAssignments(); toast('Diese Teilaufgabe ist bereits abgeschlossen.'); return; }
   task.completedUnits++;
+  if (cls.loop) lpResetClassLoop(cls);
   occurrence.done = true;
   occurrence.missed = false;
   lpRefreshAssignments(); saveToLocal(); renderWeekCalendar(); renderClassList(); toast('Lerneinheit erledigt ✓');
@@ -1764,6 +1777,7 @@ function openClassModal(classId='') {
   document.getElementById('class-name').value = cls?.name || '';
   document.getElementById('class-description').value = cls?.description || '';
   document.getElementById('class-color').value = cls?.color || '#f3d8cb';
+  document.getElementById('class-loop').checked = !!cls?.loop;
   document.getElementById('class-delete-btn').style.display = cls ? 'inline-flex' : 'none';
   const editor = document.getElementById('class-task-editor');
   editor.innerHTML = '';
@@ -1803,7 +1817,7 @@ function saveClass() {
     tasks.push({id:row.dataset.taskId,title,description:row.querySelector('.task-description').value.trim(),units,completedUnits});
   }
   const existing = data.weekPlanClasses.find(cls => cls.id === lpClassEditId);
-  const cls = {id:existing?.id || `class-${Date.now()}-${Math.random().toString(36).slice(2)}`,name,description:document.getElementById('class-description').value.trim(),color:document.getElementById('class-color').value,tasks};
+  const cls = {id:existing?.id || `class-${Date.now()}-${Math.random().toString(36).slice(2)}`,name,description:document.getElementById('class-description').value.trim(),color:document.getElementById('class-color').value,tasks,loop:document.getElementById('class-loop').checked};
   if (existing) Object.assign(existing,cls); else data.weekPlanClasses.push(cls);
   data.weekPlanSlots.forEach(block => {
     if (block.classId === cls.id) {
@@ -1830,7 +1844,8 @@ function renderClassList() {
     const completed = cls.tasks.reduce((sum,task) => sum + task.completedUnits,0);
     const total = cls.tasks.reduce((sum,task) => sum + task.units,0);
     const tasks = cls.tasks.length ? cls.tasks.map(task => `<div class="item-meta" style="margin-top:8px">${escapeHtml(task.title)} · ${task.completedUnits}/${task.units} Einheiten${task.description ? ` — ${escapeHtml(task.description)}` : ''}</div>`).join('') : '<div class="item-meta" style="margin-top:8px">Noch keine Teilaufgaben</div>';
-    return `<div class="lp-class-card" style="border-left-color:${escapeHtml(cls.color)}"><div class="lp-class-head"><div><strong>${escapeHtml(cls.name)}</strong><div class="item-meta">${completed} von ${total} Lerneinheiten erledigt${cls.description ? ` · ${escapeHtml(cls.description)}` : ''}</div>${tasks}</div><button class="btn small" onclick="openClassModal('${cls.id}')">Bearbeiten</button></div></div>`;
+    const loopTag = cls.loop ? '<span class="tag accent" style="margin-top:8px;display:inline-flex;">Loop</span>' : '';
+    return `<div class="lp-class-card" style="border-left-color:${escapeHtml(cls.color)}"><div class="lp-class-head"><div><strong>${escapeHtml(cls.name)}</strong><div class="item-meta">${completed} von ${total} Lerneinheiten erledigt${cls.description ? ` · ${escapeHtml(cls.description)}` : ''}</div>${loopTag}${tasks}</div><button class="btn small" onclick="openClassModal('${cls.id}')">Bearbeiten</button></div></div>`;
   }).join('');
 }
 
