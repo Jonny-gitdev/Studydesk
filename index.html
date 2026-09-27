@@ -1658,20 +1658,45 @@ function lpHasOverlap(day,start,end,excludeId='') {
 window.addEventListener('pointermove',handleCalendarPointerMove);
 window.addEventListener('pointerup',finishCalendarPointer);
 
+function lpSyncBlockFromClass(block, classId) {
+  if (!block) return;
+  const cls = data.weekPlanClasses.find(item => item.id === classId);
+  if (!cls) return;
+  block.classId = classId;
+  block.name = cls.name;
+  block.description = cls.description || '';
+  block.color = cls.color || '#f3d8cb';
+  return cls;
+}
 function openBlockModal(blockId,dateStr) {
   if (Date.now() < lpSuppressClickUntil) return;
   lpBlockEditId = blockId; lpBlockEditDate = dateStr;
   const block = data.weekPlanSlots.find(item => item.id === blockId);
   if (!block) return;
   document.getElementById('block-modal-title').textContent = 'Lernblock bearbeiten';
-  document.getElementById('block-name').value = block.name;
-  document.getElementById('block-description').value = block.description || '';
   document.getElementById('block-start').value = block.startTime;
   document.getElementById('block-end').value = block.endTime;
-  document.getElementById('block-color').value = block.color;
   const select = document.getElementById('block-class');
   select.innerHTML = '<option value="">Keine Klasse</option>' + data.weekPlanClasses.map(cls => `<option value="${escapeHtml(cls.id)}">${escapeHtml(cls.name)}</option>`).join('');
   select.value = block.classId || '';
+  const classMatch = data.weekPlanClasses.find(candidate => candidate.id === block.classId);
+  if (classMatch) {
+    document.getElementById('block-name').value = classMatch.name;
+    document.getElementById('block-description').value = classMatch.description || '';
+    document.getElementById('block-color').value = classMatch.color || '#f3d8cb';
+  } else {
+    document.getElementById('block-name').value = block.name;
+    document.getElementById('block-description').value = block.description || '';
+    document.getElementById('block-color').value = block.color;
+  }
+  select.onchange = () => {
+    const selectedClass = data.weekPlanClasses.find(candidate => candidate.id === select.value);
+    if (selectedClass) {
+      document.getElementById('block-name').value = selectedClass.name;
+      document.getElementById('block-description').value = selectedClass.description || '';
+      document.getElementById('block-color').value = selectedClass.color || '#f3d8cb';
+    }
+  };
   const occurrence = data.weekPlanDays[dateStr]?.find(item => item.templateId === blockId);
   const cls = data.weekPlanClasses.find(candidate => candidate.id === block.classId);
   const task = cls?.tasks.find(candidate => candidate.id === occurrence?.assignedTaskId);
@@ -1686,18 +1711,20 @@ function closeBlockModal() { closeModal('block-modal'); lpBlockEditId = null; lp
 function saveBlock() {
   const block = data.weekPlanSlots.find(item => item.id === lpBlockEditId);
   if (!block) return;
-  const name = document.getElementById('block-name').value.trim();
+  const selectedClassId = document.getElementById('block-class').value;
+  const selectedClass = data.weekPlanClasses.find(item => item.id === selectedClassId);
+  const name = selectedClass ? selectedClass.name : document.getElementById('block-name').value.trim();
   const start = lpTimeMinutes(document.getElementById('block-start').value);
   const end = lpTimeMinutes(document.getElementById('block-end').value);
   if (!name) { toast('Bitte einen Namen für den Block eingeben.'); return; }
   if (!Number.isFinite(start) || !Number.isFinite(end) || start < LP_GRID_START || end > LP_GRID_END || end - start < 30) { toast('Bitte einen gültigen Zeitraum zwischen 06:00 und 24:00 wählen (mindestens 30 Minuten).'); return; }
   if (lpHasOverlap(block.day,start,end,block.id)) { toast('Dieser Zeitraum ist bereits belegt.'); return; }
   block.name = name;
-  block.description = document.getElementById('block-description').value.trim();
+  block.description = selectedClass ? (selectedClass.description || '') : document.getElementById('block-description').value.trim();
   block.startTime = lpFormatTime(start);
   block.endTime = lpFormatTime(end);
-  block.color = document.getElementById('block-color').value;
-  block.classId = document.getElementById('block-class').value;
+  block.color = selectedClass ? (selectedClass.color || '#f3d8cb') : document.getElementById('block-color').value;
+  block.classId = selectedClassId;
   saveToLocal(); closeBlockModal(); renderWeekCalendar(); renderClassList(); toast('Block gespeichert');
 }
 function deleteCurrentBlock() {
@@ -1776,6 +1803,13 @@ function saveClass() {
   const existing = data.weekPlanClasses.find(cls => cls.id === lpClassEditId);
   const cls = {id:existing?.id || `class-${Date.now()}-${Math.random().toString(36).slice(2)}`,name,description:document.getElementById('class-description').value.trim(),color:document.getElementById('class-color').value,tasks};
   if (existing) Object.assign(existing,cls); else data.weekPlanClasses.push(cls);
+  data.weekPlanSlots.forEach(block => {
+    if (block.classId === cls.id) {
+      block.name = cls.name;
+      block.description = cls.description || '';
+      block.color = cls.color || '#f3d8cb';
+    }
+  });
   saveToLocal(); closeClassModal(); renderClassList(); renderWeekCalendar(); toast('Klasse gespeichert');
 }
 function deleteCurrentClass() {
