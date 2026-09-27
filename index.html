@@ -1293,17 +1293,19 @@ function migrateLearningPlanData() {
     ? String(value)
     : `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const oldQueue = Array.isArray(data.subjectQueue) ? data.subjectQueue : [];
-  oldQueue.forEach(entry => {
-    if (data.weekPlanClasses.some(c => c.name === entry.subject)) return;
-    const completedUnits = Math.max(0, Number(entry.units || 1) - Number(entry.remaining ?? entry.units ?? 1));
-    data.weekPlanClasses.push({
-      id: `legacy-${entry.id || Date.now()}`,
-      name: entry.subject || 'Alte Klasse',
-      description: '',
-      color: '#f3d8cb',
-      tasks: [{id:`legacy-task-${entry.id || Date.now()}`, title:entry.subject || 'Lerneinheit', description:'', units:Math.max(1, Number(entry.units || 1)), completedUnits}]
+  if (data.weekPlanClasses.length === 0) {
+    oldQueue.forEach(entry => {
+      if (data.weekPlanClasses.some(c => c.name === entry.subject)) return;
+      const completedUnits = Math.max(0, Number(entry.units || 1) - Number(entry.remaining ?? entry.units ?? 1));
+      data.weekPlanClasses.push({
+        id: `legacy-${entry.id || Date.now()}`,
+        name: entry.subject || 'Alte Klasse',
+        description: '',
+        color: '#f3d8cb',
+        tasks: [{id:`legacy-task-${entry.id || Date.now()}`, title:entry.subject || 'Lerneinheit', description:'', units:Math.max(1, Number(entry.units || 1)), completedUnits}]
+      });
     });
-  });
+  }
   data.weekPlanClasses.forEach(cls => {
     cls.id = makeSafeId(cls.id,'class');
     cls.name = String(cls.name || 'Unbenannte Klasse');
@@ -1814,7 +1816,9 @@ function saveClass() {
 }
 function deleteCurrentClass() {
   if (!lpClassEditId || !confirm('Klasse und ihre Teilaufgaben löschen? Die Lernblöcke bleiben im Kalender, verlieren aber ihre Klassenzuordnung.')) return;
+  const deletedClass = data.weekPlanClasses.find(cls => cls.id === lpClassEditId);
   data.weekPlanClasses = data.weekPlanClasses.filter(cls => cls.id !== lpClassEditId);
+  data.subjectQueue = data.subjectQueue.filter(entry => !deletedClass || entry.subject !== deletedClass.name);
   data.weekPlanSlots.forEach(block => { if (block.classId === lpClassEditId) block.classId = ''; });
   saveToLocal(); closeClassModal(); renderClassList(); renderWeekCalendar(); toast('Klasse entfernt');
 }
