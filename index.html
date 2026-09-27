@@ -148,6 +148,7 @@
   .lp-now-line{position:absolute;left:0;right:0;z-index:5;border-top:2px solid #d23b3b;pointer-events:none}
   .lp-now-line::before{content:'';position:absolute;width:8px;height:8px;border-radius:50%;background:#d23b3b;left:-4px;top:-5px}
   .lp-selection{position:absolute;left:2px;right:2px;border:2px dashed var(--accent);background:var(--accent-soft);border-radius:6px;z-index:6;pointer-events:none}
+  .lp-block-preview{position:absolute;left:4px;right:4px;z-index:7;border-radius:8px;border:2px dashed rgba(31,28,26,0.35);background:rgba(255,255,255,0.28);box-shadow:0 8px 20px rgba(31,28,26,0.12);pointer-events:none;opacity:0.9}
   .lp-calendar.adding{cursor:crosshair}
   .lp-class-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:var(--radius);padding:16px;margin-bottom:12px}
   .lp-class-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
@@ -1416,10 +1417,15 @@ function lpEnsureOccurrences(throughDate) {
   const visibleStart = new Date(currentWeekStart || getMonday(new Date()));
   for (let i = 0; i < 7; i++) lpOccurrencesForDate(fmtDate(addDays(visibleStart, i)));
 }
+function lpTaskProgressDisplay(task) {
+  if (!task || !Number.isFinite(task.units) || task.units < 1) return '0/0';
+  const currentUnit = Math.min(task.units, Math.max(1, (Number(task.completedUnits) || 0) + 1));
+  return `${currentUnit}/${task.units}`;
+}
 function lpTaskForUnit(cls, unitIndex) {
   let remainingIndex = unitIndex;
   for (const task of cls.tasks) {
-    const remaining = Math.max(0, task.units - task.completedUnits);
+    const remaining = Math.max(0, task.units - (Number(task.completedUnits) || 0));
     if (remainingIndex < remaining) return task;
     remainingIndex -= remaining;
   }
@@ -1482,7 +1488,7 @@ function renderWeekCalendar() {
       const height = (end - start) * LP_MINUTES_PER_PIXEL;
       const escapedName = escapeHtml(block.name);
       const classCompleted = cls && cls.tasks.length > 0 && cls.tasks.every(item => item.completedUnits >= item.units);
-      const taskMarkup = task ? `<div class="lp-block-task">${escapeHtml(task.title)} · ${task.completedUnits + 1}/${task.units}</div>` : (classCompleted ? '<div class="lp-block-task">Klasse abgeschlossen</div>' : '');
+      const taskMarkup = task ? `<div class="lp-block-task">${escapeHtml(task.title)} · ${lpTaskProgressDisplay(task)}</div>` : (classCompleted ? '<div class="lp-block-task">Klasse abgeschlossen</div>' : '');
       const action = cls && task && occurrence && !occurrence.done
         ? `<div class="lp-block-actions"><button onclick="event.stopPropagation();completeOccurrence('${dateStr}','${block.id}')">✓ Erledigt</button><button onclick="event.stopPropagation();missOccurrence('${dateStr}','${block.id}')">↷ Verschieben</button></div>`
         : '';
@@ -1544,11 +1550,11 @@ function beginCalendarPointer(event, day) {
 function beginBlockPointer(event, blockId) {
   if (lpCreateMode) return;
   if (event.button !== 0 || event.target.closest('.lp-resize-handle') || event.target.closest('button')) return;
-  event.preventDefault();
   const block = data.weekPlanSlots.find(item => item.id === blockId);
   if (!block) return;
   const dayColumn = event.currentTarget.parentElement;
-  lpInteraction = {mode:'move',blockId,day:block.day,start:lpTimeMinutes(block.startTime),end:lpTimeMinutes(block.endTime),originalStart:lpTimeMinutes(block.startTime),duration:lpTimeMinutes(block.endTime)-lpTimeMinutes(block.startTime),originY:event.clientY,originX:event.clientX,dayIndex:Number(dayColumn.dataset.dayIndex),moved:false};
+  lpInteraction = {mode:'move',blockId,day:block.day,start:lpTimeMinutes(block.startTime),end:lpTimeMinutes(block.endTime),originalStart:lpTimeMinutes(block.startTime),duration:lpTimeMinutes(block.endTime)-lpTimeMinutes(block.startTime),originY:event.clientY,originX:event.clientX,dayIndex:Number(dayColumn.dataset.dayIndex),column:dayColumn,blockColor:block.color,moved:false};
+  lpShowSelection(lpInteraction);
   window.addEventListener('pointermove', handleCalendarPointerMove);
   window.addEventListener('pointerup', finishCalendarPointer, {once:true});
 }
@@ -1557,17 +1563,30 @@ function beginBlockResize(event, blockId, edge) {
   event.preventDefault();
   const block = data.weekPlanSlots.find(item => item.id === blockId);
   if (!block) return;
-  lpInteraction = {mode:edge === 'start' ? 'resize-start' : 'resize-end',blockId,day:block.day,start:lpTimeMinutes(block.startTime),end:lpTimeMinutes(block.endTime),originalStart:lpTimeMinutes(block.startTime),originalEnd:lpTimeMinutes(block.endTime),originY:event.clientY,moved:false};
+  const dayColumn = event.currentTarget.closest('.lp-day-column');
+  lpInteraction = {mode:edge === 'start' ? 'resize-start' : 'resize-end',blockId,day:block.day,start:lpTimeMinutes(block.startTime),end:lpTimeMinutes(block.endTime),originalStart:lpTimeMinutes(block.startTime),originalEnd:lpTimeMinutes(block.endTime),originY:event.clientY,column:dayColumn,blockColor:block.color,moved:false};
+  lpShowSelection(lpInteraction);
   window.addEventListener('pointermove', handleCalendarPointerMove);
   window.addEventListener('pointerup', finishCalendarPointer, {once:true});
 }
 function lpShowSelection(interaction) {
   document.querySelector('.lp-selection')?.remove();
-  const column = interaction.column;
+  document.querySelector('.lp-block-preview')?.remove();
+  const column = interaction.column || document.querySelector(`.lp-day-column[data-day="${interaction.day}"]`);
+  if (!column) return;
   const preview = document.createElement('div');
-  preview.className = 'lp-selection';
-  preview.style.top = `${Math.min(interaction.start,interaction.end) - LP_GRID_START}px`;
-  preview.style.height = `${Math.max(30,Math.abs(interaction.end - interaction.start))}px`;
+  preview.className = interaction.mode === 'create' ? 'lp-selection' : 'lp-block-preview';
+  const top = Math.min(interaction.start, interaction.end) - LP_GRID_START;
+  const height = Math.max(30, Math.abs(interaction.end - interaction.start));
+  preview.style.top = `${Math.max(0, top)}px`;
+  preview.style.height = `${height}px`;
+  if (interaction.blockColor) preview.style.background = interaction.blockColor;
+  if (interaction.mode === 'move' || interaction.mode === 'resize-start' || interaction.mode === 'resize-end') {
+    preview.style.left = '4px';
+    preview.style.right = '4px';
+    preview.style.border = '2px dashed rgba(31,28,26,0.35)';
+    preview.style.opacity = '0.8';
+  }
   column.appendChild(preview);
 }
 function handleCalendarPointerMove(event) {
@@ -1580,22 +1599,30 @@ function handleCalendarPointerMove(event) {
     lpShowSelection(interaction);
   } else if (interaction.mode === 'resize-end') {
     interaction.end = Math.max(interaction.start + 30, Math.min(LP_GRID_END, lpSnapMinutes(interaction.originalEnd + delta)));
+    lpShowSelection(interaction);
   } else if (interaction.mode === 'resize-start') {
     interaction.start = Math.max(LP_GRID_START,Math.min(interaction.originalEnd - 30,lpSnapMinutes(interaction.originalStart + delta)));
+    interaction.end = interaction.originalEnd;
+    lpShowSelection(interaction);
   } else {
     const target = document.elementFromPoint(event.clientX,event.clientY)?.closest('.lp-day-column');
-    if (target) interaction.day = target.dataset.day;
+    if (target) {
+      interaction.day = target.dataset.day;
+      interaction.column = target;
+    }
     interaction.start = Math.max(LP_GRID_START,Math.min(LP_GRID_END - interaction.duration,lpSnapMinutes(interaction.originalStart + delta)));
     interaction.end = interaction.start + interaction.duration;
+    lpShowSelection(interaction);
   }
 }
 function finishCalendarPointer(event) {
   const interaction = lpInteraction;
   if (!interaction) return;
+  document.querySelector('.lp-selection')?.remove();
+  document.querySelector('.lp-block-preview')?.remove();
   window.removeEventListener('pointermove',handleCalendarPointerMove);
   lpInteraction = null;
   if (interaction.mode === 'create') {
-    document.querySelector('.lp-selection')?.remove();
     const start = interaction.start === interaction.end ? interaction.start : Math.min(interaction.start,interaction.end);
     const end = interaction.start === interaction.end ? Math.min(LP_GRID_END,start + 30) : Math.max(interaction.start,interaction.end);
     if (end > start && !lpHasOverlap(interaction.day,start,end)) {
@@ -1616,8 +1643,8 @@ function finishCalendarPointer(event) {
   if (!block) return;
   const start = lpTimeMinutes(block.startTime);
   const end = lpTimeMinutes(block.endTime);
-  const nextStart = interaction.mode === 'resize-end' ? start : interaction.start;
-  const nextEnd = interaction.end;
+  const nextStart = interaction.mode === 'resize-start' ? interaction.start : interaction.mode === 'resize-end' ? start : interaction.start;
+  const nextEnd = interaction.mode === 'resize-start' ? interaction.originalEnd : interaction.end;
   if (lpHasOverlap(interaction.day,nextStart,nextEnd,block.id)) { toast('Dieser Zeitraum ist bereits belegt.'); renderWeekCalendar(); return; }
   block.day = interaction.day;
   block.startTime = lpFormatTime(nextStart);
@@ -1650,7 +1677,7 @@ function openBlockModal(blockId,dateStr) {
   const task = cls?.tasks.find(candidate => candidate.id === occurrence?.assignedTaskId);
   const actions = document.getElementById('block-occurrence-actions');
   actions.style.display = cls && task && occurrence && !occurrence.done ? 'block' : 'none';
-  document.getElementById('block-assignment').textContent = task ? `Lerneinheit: ${task.title} (${task.completedUnits + 1}/${task.units})` : '';
+  document.getElementById('block-assignment').textContent = task ? `Lerneinheit: ${task.title} (${lpTaskProgressDisplay(task)})` : '';
   document.getElementById('block-delete-btn').style.display = 'inline-flex';
   openModal('block-modal');
 }
