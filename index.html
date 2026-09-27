@@ -128,20 +128,20 @@
   .lp-calendar-head{position:sticky;top:0;z-index:8;background:var(--surface);border-bottom:1px solid var(--border);height:58px;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:12px;font-weight:600}
   .lp-calendar-head.today{color:var(--accent)}
   .lp-calendar-head small{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--ink-tertiary);font-weight:400}
-  .lp-time-axis{position:relative;background:var(--surface);border-right:1px solid var(--border);height:1080px}
+  .lp-time-axis{position:relative;background:var(--surface);border-right:1px solid var(--border);height:720px}
   .lp-hour-label{position:absolute;right:8px;transform:translateY(-50%);font:10px 'JetBrains Mono',monospace;color:var(--ink-tertiary)}
-  .lp-day-column{position:relative;height:1080px;border-right:1px solid var(--border-light);background:repeating-linear-gradient(to bottom,transparent 0,transparent 29px,var(--border-light) 29px,var(--border-light) 30px,transparent 30px,transparent 59px,var(--border) 59px,var(--border) 60px)}
+  .lp-day-column{position:relative;height:720px;border-right:1px solid var(--border-light);background:repeating-linear-gradient(to bottom,transparent 0,transparent 29px,var(--border-light) 29px,var(--border-light) 30px,transparent 30px,transparent 59px,var(--border) 59px,var(--border) 60px)}
   .lp-day-column:last-child{border-right:0}
   .lp-day-column.today{background-color:rgba(184,92,72,0.018)}
   .lp-calendar-head:first-child{z-index:10}
-  .lp-block{position:absolute;left:4px;right:4px;z-index:2;border-radius:8px;border:1px solid rgba(31,28,26,0.12);padding:7px 8px 12px;overflow:hidden;color:var(--ink);font-size:11px;line-height:1.35;cursor:grab;box-shadow:0 1px 3px rgba(31,28,26,0.08);touch-action:none;user-select:none}
+  .lp-block{position:absolute;left:4px;right:4px;z-index:2;border-radius:8px;border:1px solid rgba(31,28,26,0.12);padding:7px 8px 12px;overflow:auto;overflow-x:hidden;color:var(--ink);font-size:11px;line-height:1.35;cursor:grab;box-shadow:0 1px 3px rgba(31,28,26,0.08);touch-action:none;user-select:none;display:flex;flex-direction:column;gap:2px;overscroll-behavior:contain}
   .lp-block:hover{z-index:4;box-shadow:var(--shadow)}
   .lp-block.done{opacity:.58}
-  .lp-block-title{font-size:12px;font-weight:700;padding-right:4px}
-  .lp-block-time{font:10px 'JetBrains Mono',monospace;color:rgba(31,28,26,.7);margin:2px 0}
-  .lp-block-description{font-size:10px;color:rgba(31,28,26,.78);white-space:pre-wrap}
-  .lp-block-task{font-size:10px;font-weight:600;margin-top:3px}
-  .lp-block-actions{display:flex;gap:4px;margin-top:4px}
+  .lp-block-title{font-size:12px;font-weight:700;padding-right:4px;flex-shrink:0}
+  .lp-block-time{font:10px 'JetBrains Mono',monospace;color:rgba(31,28,26,.7);margin:2px 0;flex-shrink:0}
+  .lp-block-description{font-size:10px;color:rgba(31,28,26,.78);white-space:pre-wrap;flex-shrink:0}
+  .lp-block-task{font-size:10px;font-weight:600;margin-top:3px;flex-shrink:0;word-break:break-word}
+  .lp-block-actions{display:flex;gap:4px;margin-top:4px;flex-shrink:0}
   .lp-block-actions button{border:1px solid rgba(31,28,26,.2);border-radius:5px;background:rgba(255,255,255,.68);font-family:inherit;font-size:10px;padding:2px 5px;cursor:pointer}
   .lp-resize-handle{position:absolute;bottom:0;left:0;right:0;height:9px;cursor:ns-resize;background:linear-gradient(transparent,rgba(31,28,26,.14))}
   .lp-resize-handle.top{top:0;bottom:auto;cursor:ns-resize;background:linear-gradient(rgba(31,28,26,.14),transparent)}
@@ -1277,8 +1277,8 @@ function markSlotNotDoneAndShift() {
 
 // ── Lernplan: Kalender, wiederkehrende Blöcke und Klassen ──
 const LP_DAY_NAMES = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
-const LP_GRID_START = 6 * 60;
-const LP_GRID_END = 24 * 60;
+const LP_GRID_START = 8 * 60;
+const LP_GRID_END = 20 * 60;
 const LP_MINUTES_PER_PIXEL = 1;
 lernplanTab = 'week';
 let lpCreateMode = false;
@@ -1483,7 +1483,7 @@ function renderWeekCalendar() {
     html += `<div class="lp-calendar-head ${dateStr === todayStr ? 'today' : ''}">${lpDateDay(date)}<small>${dateStr.slice(5)}</small></div>`;
   }
   html += '<div class="lp-time-axis">';
-  for (let hour = 6; hour <= 23; hour++) html += `<span class="lp-hour-label" style="top:${(hour - 6) * 60}px">${String(hour).padStart(2,'0')}:00</span>`;
+  for (let hour = 8; hour <= 20; hour++) html += `<span class="lp-hour-label" style="top:${(hour - LP_GRID_START) * LP_MINUTES_PER_PIXEL}px">${String(hour).padStart(2,'0')}:00</span>`;
   html += '</div>';
   for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
     const date = addDays(currentWeekStart, dayIndex);
