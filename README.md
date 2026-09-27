@@ -32,6 +32,12 @@ The **Stundenplan** (schedule) tab lets you define recurring time slots: a subje
 
 This is the core time-saver of the app. Set up your schedule once at the start of semester, and all past lectures are generated in one click. The generator skips entries that already exist, so it's safe to run multiple times.
 
+### Weekly Learning Plan
+
+The **Lernplan** tab provides a weekly calendar for recurring study blocks. Add a block by dragging across a free time range, move it between days by dragging, or resize it from either edge. Each block has its own name, description, color, and optional class.
+
+Classes contain ordered subtasks with a required number of study units. Class blocks are filled with the next open subtask automatically. Marking a unit complete records progress and advances the class; marking it as not completed leaves that unit for the next appointment and shifts later class work back by one appointment. Class progress and the recurring plan are stored locally and included in data exports.
+
 ### To-Do List
 
 A simple task list with subject tagging and priority levels (normal / high). Todos can be filtered by status and are also shown as a quick overview on the dashboard. Pressing `Enter` in the input field adds the task immediately.
@@ -55,4 +61,3 @@ Your data can be exported as a `.json` file at any time via the **Export** butto
 Feature suggestions are very welcome — feel free to open an issue describing what you'd have in mind.
 
 Pull requests are also appreciated. The one thing to keep in mind: StudyDesk is intentionally simple. It's a single HTML file with no build step, no framework, no dependencies. Contributions that add genuinely useful functionality are great; contributions that add complexity for its own sake, or that require introducing a build pipeline or external libraries, are unlikely to be merged. If in doubt, open an issue first to discuss.
-

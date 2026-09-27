@@ -122,6 +122,41 @@
   .week-slot.slot-done{opacity:0.55}
   .week-slot.slot-done .slot-label{text-decoration:line-through}
   .week-slot .slot-shifted-badge{position:absolute;top:8px;right:8px;font-size:10px;color:var(--warning);font-weight:600}
+  .lp-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+  .lp-calendar-scroll{overflow:auto;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);max-height:calc(100vh - 260px);min-height:500px}
+  .lp-calendar{display:grid;grid-template-columns:58px repeat(7,minmax(125px,1fr));min-width:1050px;position:relative}
+  .lp-calendar-head{position:sticky;top:0;z-index:8;background:var(--surface);border-bottom:1px solid var(--border);height:58px;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:12px;font-weight:600}
+  .lp-calendar-head.today{color:var(--accent)}
+  .lp-calendar-head small{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--ink-tertiary);font-weight:400}
+  .lp-time-axis{position:relative;background:var(--surface);border-right:1px solid var(--border);height:1080px}
+  .lp-hour-label{position:absolute;right:8px;transform:translateY(-50%);font:10px 'JetBrains Mono',monospace;color:var(--ink-tertiary)}
+  .lp-day-column{position:relative;height:1080px;border-right:1px solid var(--border-light);background:repeating-linear-gradient(to bottom,transparent 0,transparent 29px,var(--border-light) 29px,var(--border-light) 30px,transparent 30px,transparent 59px,var(--border) 59px,var(--border) 60px)}
+  .lp-day-column:last-child{border-right:0}
+  .lp-day-column.today{background-color:rgba(184,92,72,0.018)}
+  .lp-calendar-head:first-child{z-index:10}
+  .lp-block{position:absolute;left:4px;right:4px;z-index:2;border-radius:8px;border:1px solid rgba(31,28,26,0.12);padding:7px 8px 12px;overflow:hidden;color:var(--ink);font-size:11px;line-height:1.35;cursor:grab;box-shadow:0 1px 3px rgba(31,28,26,0.08);touch-action:none;user-select:none}
+  .lp-block:hover{z-index:4;box-shadow:var(--shadow)}
+  .lp-block.done{opacity:.58}
+  .lp-block-title{font-size:12px;font-weight:700;padding-right:4px}
+  .lp-block-time{font:10px 'JetBrains Mono',monospace;color:rgba(31,28,26,.7);margin:2px 0}
+  .lp-block-description{font-size:10px;color:rgba(31,28,26,.78);white-space:pre-wrap}
+  .lp-block-task{font-size:10px;font-weight:600;margin-top:3px}
+  .lp-block-actions{display:flex;gap:4px;margin-top:4px}
+  .lp-block-actions button{border:1px solid rgba(31,28,26,.2);border-radius:5px;background:rgba(255,255,255,.68);font-family:inherit;font-size:10px;padding:2px 5px;cursor:pointer}
+  .lp-resize-handle{position:absolute;bottom:0;left:0;right:0;height:9px;cursor:ns-resize;background:linear-gradient(transparent,rgba(31,28,26,.14))}
+  .lp-resize-handle.top{top:0;bottom:auto;cursor:ns-resize;background:linear-gradient(rgba(31,28,26,.14),transparent)}
+  .lp-now-line{position:absolute;left:0;right:0;z-index:5;border-top:2px solid #d23b3b;pointer-events:none}
+  .lp-now-line::before{content:'';position:absolute;width:8px;height:8px;border-radius:50%;background:#d23b3b;left:-4px;top:-5px}
+  .lp-selection{position:absolute;left:2px;right:2px;border:2px dashed var(--accent);background:var(--accent-soft);border-radius:6px;z-index:6;pointer-events:none}
+  .lp-calendar.adding{cursor:crosshair}
+  .lp-class-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+  .lp-class-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+  .lp-task-row{display:flex;gap:8px;align-items:center;margin:8px 0}
+  .lp-task-row input:first-child{flex:1}
+  .lp-color-input{height:42px!important;padding:4px!important;width:64px!important}
+  .lp-create-hint{color:var(--accent);font-size:12px;font-weight:600}
+  .lp-empty{padding:36px 18px;text-align:center;color:var(--ink-tertiary)}
+  @media(max-width:920px){.lp-calendar-scroll{max-height:calc(100vh - 300px)}.lp-class-head{flex-direction:column}}
   .queue-item{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;cursor:grab;transition:var(--transition)}
   .queue-item:hover{box-shadow:var(--shadow);border-color:var(--accent)}
   .queue-item.active-item{border-color:var(--accent);background:var(--accent-soft)}
@@ -274,30 +309,30 @@
       </div>
       <div class="section" id="sec-lernplan">
         <div class="filter-row">
-          <button class="chip active" data-lp="queue" onclick="setLernplanTab(this,'queue')">📚 Rechtsgebiets-Warteschlange</button>
-          <button class="chip" data-lp="week" onclick="setLernplanTab(this,'week')">🗓️ Wochenplan</button>
+          <button class="chip active" data-lp="week" onclick="setLernplanTab(this,'week')">🗓️ Wochenkalender</button>
+          <button class="chip" data-lp="classes" onclick="setLernplanTab(this,'classes')">📚 Klassen & Aufgaben</button>
         </div>
         <div class="guide-grid">
-          <div class="guide-step"><strong>1. Rechtsgebiete anlegen</strong><small>Füge deine Fächer zur Warteschlange hinzu und definiere, wie oft du sie nacharbeiten möchtest.</small></div>
-          <div class="guide-step"><strong>2. Wochenvorlage setzen</strong><small>Lege wiederkehrende Zeitslots fest. Platzhalter für Rechtsgebiete werden automatisch gefüllt.</small></div>
-          <div class="guide-step"><strong>3. Wochenplan abarbeiten</strong><small>Markiere erledigte Slots. Nicht geschaffte Termine verschieben sich automatisch.</small></div>
+          <div class="guide-step"><strong>1. Wochenplan gestalten</strong><small>Ziehe Blöcke in freie Zeiten oder nutze „Block hinzufügen“. Dauer und Wochentag lassen sich direkt im Kalender anpassen.</small></div>
+          <div class="guide-step"><strong>2. Klassen konfigurieren</strong><small>Ordne Blöcke einer Klasse zu und lege Teilaufgaben samt benötigten Lerneinheiten fest.</small></div>
+          <div class="guide-step"><strong>3. Fortschritt festhalten</strong><small>Erledigte Einheiten schalten die nächste Teilaufgabe frei. Bei „Nicht geschafft“ rückt der Klassenplan um einen Termin weiter.</small></div>
         </div>
-        <div id="lp-queue-view">
-          <div class="toolbar">
-            <button class="btn primary" onclick="openSubjectQueueModal()">+ Rechtsgebiet hinzufügen</button>
-            <span class="text-muted" style="font-size:13px;">Die ersten beiden offenen Gebiete werden abwechselnd in den Plan eingetragen.</span>
-          </div>
-          <div id="subject-queue-list"></div>
-        </div>
-        <div id="lp-week-view" style="display:none;">
-          <div class="toolbar">
-            <button class="btn" onclick="setupWeekPlanTemplate()">⚙ Vorlage bearbeiten</button>
-            <button class="btn" onclick="shiftWeekView(-1)">‹ Vorherige</button>
+        <div id="lp-week-view">
+          <div class="lp-toolbar">
+            <button class="btn primary" id="lp-add-block-btn" onclick="toggleBlockCreation()">＋ Block hinzufügen</button>
+            <button class="btn" onclick="openClassModal()">⚙ Klassen verwalten</button>
+            <span id="lp-create-hint" class="lp-create-hint" style="display:none;">Freie Zeit anklicken und ziehen</span>
+            <span style="flex:1"></span>
+            <button class="btn" onclick="shiftWeekView(-1)">‹</button>
             <span id="week-range-label" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent);font-weight:600;"></span>
-            <button class="btn" onclick="shiftWeekView(1)">Nächste ›</button>
+            <button class="btn" onclick="shiftWeekView(1)">›</button>
             <button class="btn small" onclick="jumpToTodayWeek()">Heute</button>
           </div>
-          <div id="week-calendar" class="schedule-grid"></div>
+          <div id="week-calendar" class="lp-calendar-scroll"></div>
+        </div>
+        <div id="lp-classes-view" style="display:none;">
+          <div class="toolbar"><button class="btn primary" onclick="openClassModal()">＋ Klasse anlegen</button></div>
+          <div id="lp-class-list"></div>
         </div>
       </div>
       <div class="section" id="sec-notes">
@@ -390,46 +425,43 @@
     <div class="modal-actions"><button class="btn" onclick="closeScheduleModal()">Abbrechen</button><button class="btn primary" onclick="saveScheduleEntry()">Speichern</button></div>
   </div>
 </div>
-<div class="modal-bg" id="subject-queue-modal">
+<div class="modal-bg" id="block-modal">
   <div class="modal">
-    <h2 id="sq-modal-title">Rechtsgebiet zur Warteschlange</h2>
-    <label>Rechtsgebiet</label>
-    <input type="text" id="sq-subject" list="subject-datalist" autocomplete="off" placeholder="z.B. Strafrecht AT">
-    <label>Anzahl Einheiten</label>
-    <input type="number" id="sq-units" min="1" value="1">
-    <div class="modal-actions"><button class="btn" onclick="closeSubjectQueueModal()">Abbrechen</button><button class="btn primary" onclick="saveSubjectQueueEntry()">Speichern</button></div>
+    <h2 id="block-modal-title">Lernblock bearbeiten</h2>
+    <label>Name</label><input id="block-name" maxlength="100" placeholder="z. B. BGB AT nacharbeiten">
+    <label>Beschreibung</label><textarea id="block-description" rows="3" placeholder="Was möchtest du in diesem Block erledigen?"></textarea>
+    <div class="flex gap-2">
+      <div style="flex:1"><label>Beginn</label><input type="time" id="block-start" min="06:00" max="23:30" step="1800"></div>
+      <div style="flex:1"><label>Ende</label><input type="text" id="block-end" inputmode="numeric" placeholder="HH:MM (bis 24:00)"></div>
+    </div>
+    <label>Farbe</label><input type="color" id="block-color" class="lp-color-input" value="#f3d8cb">
+    <label>Klasse (optional)</label><select id="block-class"><option value="">Keine Klasse</option></select>
+    <div id="block-occurrence-actions" style="display:none;margin-top:14px;">
+      <div class="text-muted" id="block-assignment" style="font-size:13px;margin-bottom:8px;"></div>
+      <div class="flex gap-2">
+        <button class="btn success" onclick="completeCurrentOccurrence()">✓ Lerneinheit erledigt</button>
+        <button class="btn danger" onclick="missCurrentOccurrence()">↷ Nicht geschafft</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn danger" id="block-delete-btn" onclick="deleteCurrentBlock()">Löschen</button>
+      <button class="btn" onclick="closeBlockModal()">Abbrechen</button>
+      <button class="btn primary" onclick="saveBlock()">Speichern</button>
+    </div>
   </div>
 </div>
-<div class="modal-bg" id="weekplan-template-modal">
-  <div class="modal" style="width:680px;">
-    <h2>Wochenplan-Vorlage</h2>
-    <p class="text-muted" style="font-size:13px;margin-bottom:16px;">Definiere wiederkehrende Zeitslots pro Wochentag. Platzhalter für Rechtsgebiete werden automatisch aus der Warteschlange gefüllt.</p>
-    <div class="toolbar" style="margin-bottom:12px;">
-      <select id="wpt-day"><option>Montag</option><option>Dienstag</option><option>Mittwoch</option><option>Donnerstag</option><option>Freitag</option><option>Samstag</option><option>Sonntag</option></select>
-      <input type="text" id="wpt-time" placeholder="08:00 – 10:00" style="width:140px;">
-      <select id="wpt-type"><option value="rechtsgebiet">Rechtsgebiet nacharbeiten</option><option value="klausur">Klausur schreiben</option><option value="karteikarten">Karteikarten lernen</option><option value="frei">Frei / Sonstiges</option></select>
-      <input type="text" id="wpt-label" placeholder="Bezeichnung (bei Frei)" style="width:180px;">
-      <button class="btn primary" onclick="addWeekPlanTemplateSlot()">+ Hinzufügen</button>
+<div class="modal-bg" id="class-modal">
+  <div class="modal" style="width:680px">
+    <h2 id="class-modal-title">Klasse anlegen</h2>
+    <label>Name der Klasse</label><input id="class-name" maxlength="100" placeholder="z. B. Jura-Rechtsgebiete">
+    <label>Beschreibung</label><textarea id="class-description" rows="2" placeholder="Wiederkehrende Lernreihe beschreiben (optional)"></textarea>
+    <label>Farbe</label><input type="color" id="class-color" class="lp-color-input" value="#f3d8cb">
+    <div class="flex items-center justify-between" style="margin-top:20px;margin-bottom:8px;">
+      <strong>Teilaufgaben</strong><button class="btn small" onclick="addClassTaskRow()">＋ Teilaufgabe</button>
     </div>
-    <div id="wpt-list" style="max-height:340px;overflow-y:auto;"></div>
-    <div class="modal-actions"><button class="btn" onclick="closeWeekPlanTemplateModal()">Schließen</button><button class="btn primary" onclick="regenerateFromTemplate()">Kalender neu füllen</button></div>
-  </div>
-</div>
-<div class="modal-bg" id="slot-detail-modal">
-  <div class="modal">
-    <h2>Slot bearbeiten</h2>
-    <div id="slot-detail-info" style="font-size:12px;color:var(--ink-tertiary);margin-bottom:12px;font-family:'JetBrains Mono',monospace;"></div>
-    <label>Uhrzeit</label>
-    <input type="text" id="slot-m-time">
-    <label>Typ</label>
-    <select id="slot-m-type" onchange="toggleSlotLabelField()"><option value="rechtsgebiet">Rechtsgebiet nacharbeiten</option><option value="klausur">Klausur schreiben</option><option value="karteikarten">Karteikarten lernen</option><option value="frei">Frei / Sonstiges</option></select>
-    <label id="slot-m-label-wrap">Bezeichnung</label>
-    <input type="text" id="slot-m-label">
-    <label class="checkbox-label"><input type="checkbox" id="slot-m-done"> ✅ Als erledigt markieren</label>
-    <div class="modal-actions" style="justify-content:space-between;">
-      <button class="btn danger" onclick="markSlotNotDoneAndShift()">↷ Nicht geschafft – verschieben</button>
-      <div class="flex gap-2"><button class="btn" onclick="closeSlotDetailModal()">Abbrechen</button><button class="btn primary" onclick="saveSlotDetail()">Speichern</button></div>
-    </div>
+    <p class="text-muted" style="font-size:12px;margin-bottom:10px;">Die Reihenfolge in dieser Liste bestimmt, welche Teilaufgabe zuerst in deinen Lernblöcken erscheint.</p>
+    <div id="class-task-editor"></div>
+    <div class="modal-actions"><button class="btn danger" id="class-delete-btn" onclick="deleteCurrentClass()">Klasse löschen</button><button class="btn" onclick="closeClassModal()">Abbrechen</button><button class="btn primary" onclick="saveClass()">Speichern</button></div>
   </div>
 </div>
 <div class="modal-bg" id="import-modal">
@@ -459,6 +491,7 @@ if (!data.subjectQueue) data.subjectQueue = [];
 if (!data.weekPlanSlots) data.weekPlanSlots = [];
 if (!data.weekPlanDays) data.weekPlanDays = {};
 if (!data.weekPlanAnchor) data.weekPlanAnchor = null;
+if (!data.weekPlanClasses) data.weekPlanClasses = [];
 
 let currentWeekStart = null;
 let lernplanSubjectEditId = null;
@@ -468,7 +501,7 @@ let currentDetailId = null, currentDetailType = null, draggedQueueId = null;
 const TYPE_LABELS = { rechtsgebiet: 'Rechtsgebiet nacharbeiten', klausur: 'Klausur schreiben', karteikarten: 'Karteikarten lernen', frei: 'Frei / Sonstiges' };
 const WEEKDAY_NAMES = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 const SECTION_TITLES = { dashboard:'Übersicht', lectures:'Vorlesungen', schedule:'Stundenplan', lernplan:'Lernplan', notes:'Notizen', todos:'Aufgaben' };
-const SECTION_ACTIONS = { dashboard:null, lectures:'openLecModal', schedule:'openScheduleModal', lernplan:'openSubjectQueueModal', notes:'newNote', todos:'addTodo' };
+const SECTION_ACTIONS = { dashboard:null, lectures:'openLecModal', schedule:'openScheduleModal', lernplan:'toggleBlockCreation', notes:'newNote', todos:'addTodo' };
 
 function saveToLocal() { localStorage.setItem('studydesk_pro', JSON.stringify(data)); updateDash(); }
 function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
@@ -488,14 +521,14 @@ function setActiveSection(section) {
   const btn = document.getElementById('topbar-action-btn');
   if (SECTION_ACTIONS[section]) {
     btn.style.display = 'inline-flex'; btn.onclick = new Function(SECTION_ACTIONS[section]+'()');
-    const labels = { openLecModal:'+ Vorlesung', openScheduleModal:'+ Termin', openSubjectQueueModal:'+ Rechtsgebiet', newNote:'+ Notiz', addTodo:'+ Aufgabe' };
+    const labels = { openLecModal:'+ Vorlesung', openScheduleModal:'+ Termin', toggleBlockCreation:'+ Block', newNote:'+ Notiz', addTodo:'+ Aufgabe' };
     btn.textContent = labels[SECTION_ACTIONS[section]];
   } else { btn.style.display = 'none'; }
   if (section === 'lectures') renderLectures();
   if (section === 'schedule') renderSchedule();
   if (section === 'notes') renderNotesList();
   if (section === 'todos') { renderTodos(); populateTodoSubject(); }
-  if (section === 'lernplan') { renderSubjectQueue(); if(!currentWeekStart) currentWeekStart = getMonday(new Date()); renderWeekCalendar(); }
+  if (section === 'lernplan') { if(!currentWeekStart) currentWeekStart = getMonday(new Date()); renderWeekCalendar(); renderClassList(); }
   if (section === 'dashboard') updateDash();
 }
 function updateDate() { document.getElementById('date-display').textContent = new Date().toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long', year:'numeric'}); }
@@ -521,8 +554,10 @@ function handleImportFile(input) {
       if (typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Ungültig');
       if (!confirm('Alle aktuellen Daten werden überschrieben. Fortfahren?')) return;
       data = { lectures:parsed.lectures||[], schedule:parsed.schedule||[], todos:parsed.todos||[], notes:parsed.notes||[],
-        subjectQueue:parsed.subjectQueue||[], weekPlanSlots:parsed.weekPlanSlots||[], weekPlanDays:parsed.weekPlanDays||{}, weekPlanAnchor:parsed.weekPlanAnchor||null };
-      saveToLocal(); renderLectures(); renderSchedule(); renderTodos(); renderNotesList(); updateDash();
+        subjectQueue:parsed.subjectQueue||[], weekPlanSlots:parsed.weekPlanSlots||[], weekPlanDays:parsed.weekPlanDays||{}, weekPlanAnchor:parsed.weekPlanAnchor||null,
+        weekPlanClasses:parsed.weekPlanClasses||[] };
+      migrateLearningPlanData();
+      saveToLocal(); renderLectures(); renderSchedule(); renderTodos(); renderNotesList(); renderClassList(); renderWeekCalendar(); updateDash();
       closeImportModal(); toast('Import erfolgreich ✓');
     } catch(err) { toast('Fehler: Ungültige JSON-Datei'); }
   };
@@ -770,6 +805,12 @@ let lernplanTab = 'queue';
 
 function setLernplanTab(btn, val) {
   lernplanTab = val;
+  if (val !== 'week' && lpCreateMode) {
+    lpCreateMode = false;
+    document.getElementById('lp-add-block-btn').textContent = '＋ Block hinzufügen';
+    document.getElementById('lp-add-block-btn').classList.remove('success');
+    document.getElementById('lp-create-hint').style.display = 'none';
+  }
   document.querySelectorAll('.chip[data-lp]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('lp-queue-view').style.display = val === 'queue' ? 'block' : 'none';
@@ -1232,6 +1273,502 @@ function markSlotNotDoneAndShift() {
   toast(`Verschoben – Termin jetzt am ${targetDateStr}`);
 }
 
+// ── Lernplan: Kalender, wiederkehrende Blöcke und Klassen ──
+const LP_DAY_NAMES = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
+const LP_GRID_START = 6 * 60;
+const LP_GRID_END = 24 * 60;
+const LP_MINUTES_PER_PIXEL = 1;
+lernplanTab = 'week';
+let lpCreateMode = false;
+let lpBlockEditId = null;
+let lpBlockEditDate = null;
+let lpClassEditId = null;
+let lpSuppressClickUntil = 0;
+let lpInteraction = null;
+
+function migrateLearningPlanData() {
+  if (!Array.isArray(data.weekPlanClasses)) data.weekPlanClasses = [];
+  const makeSafeId = (value,prefix) => /^[A-Za-z0-9_-]+$/.test(String(value || ''))
+    ? String(value)
+    : `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const oldQueue = Array.isArray(data.subjectQueue) ? data.subjectQueue : [];
+  oldQueue.forEach(entry => {
+    if (data.weekPlanClasses.some(c => c.name === entry.subject)) return;
+    const completedUnits = Math.max(0, Number(entry.units || 1) - Number(entry.remaining ?? entry.units ?? 1));
+    data.weekPlanClasses.push({
+      id: `legacy-${entry.id || Date.now()}`,
+      name: entry.subject || 'Alte Klasse',
+      description: '',
+      color: '#f3d8cb',
+      tasks: [{id:`legacy-task-${entry.id || Date.now()}`, title:entry.subject || 'Lerneinheit', description:'', units:Math.max(1, Number(entry.units || 1)), completedUnits}]
+    });
+  });
+  data.weekPlanClasses.forEach(cls => {
+    cls.id = makeSafeId(cls.id,'class');
+    cls.name = String(cls.name || 'Unbenannte Klasse');
+    cls.description = String(cls.description || '');
+    cls.color = /^#[0-9a-f]{6}$/i.test(String(cls.color || '')) ? cls.color : '#f3d8cb';
+    if (!Array.isArray(cls.tasks)) cls.tasks = [];
+    cls.tasks.forEach(task => {
+      task.id = makeSafeId(task.id,'task');
+      task.title = String(task.title || 'Unbenannte Teilaufgabe');
+      task.description = String(task.description || '');
+      const units = Number(task.units);
+      task.units = Number.isInteger(units) && units > 0 ? units : 1;
+      const completed = Number(task.completedUnits);
+      task.completedUnits = Number.isInteger(completed) ? Math.min(task.units,Math.max(0,completed)) : 0;
+    });
+  });
+
+  const toMinutes = value => {
+    const match = String(value || '').match(/(\d{1,2}):(\d{2})/);
+    return match ? Number(match[1]) * 60 + Number(match[2]) : 9 * 60;
+  };
+  const formatTime = minutes => `${String(Math.floor(minutes / 60)).padStart(2,'0')}:${String(minutes % 60).padStart(2,'0')}`;
+  data.weekPlanSlots = (Array.isArray(data.weekPlanSlots) ? data.weekPlanSlots : []).map(slot => {
+    const legacyStart = toMinutes(slot.startTime || slot.time);
+    const rangeEnd = String(slot.time || '').match(/(?:–|-|—)\s*(\d{1,2}:\d{2})/);
+    const start = Math.max(LP_GRID_START, Math.min(LP_GRID_END - 30, legacyStart));
+    const end = Math.max(start + 30, Math.min(LP_GRID_END, Number(slot.endTime ? toMinutes(slot.endTime) : (rangeEnd ? toMinutes(rangeEnd[1]) : start + 60))));
+    const linkedClass = slot.classId ? data.weekPlanClasses.find(c => c.id === slot.classId) : null;
+    const legacyClass = slot.type === 'rechtsgebiet' && data.weekPlanClasses.length === 1 ? data.weekPlanClasses[0] : null;
+    return {
+      id: makeSafeId(slot.id,'block'),
+      day: LP_DAY_NAMES.includes(slot.day) ? slot.day : 'Montag',
+      startTime: formatTime(start),
+      endTime: formatTime(end),
+      name: String(slot.name || slot.label || (slot.type === 'rechtsgebiet' ? 'Rechtsgebiet nacharbeiten' : TYPE_LABELS[slot.type] || 'Lernblock')),
+      description: String(slot.description || ''),
+      color: /^#[0-9a-f]{6}$/i.test(slot.color || '') ? slot.color : '#f3d8cb',
+      classId: linkedClass?.id || legacyClass?.id || ''
+    };
+  });
+  if (!data.weekPlanDays || typeof data.weekPlanDays !== 'object') data.weekPlanDays = {};
+  Object.entries(data.weekPlanDays).forEach(([date, entries]) => {
+    if (!Array.isArray(entries)) { data.weekPlanDays[date] = []; return; }
+    data.weekPlanDays[date] = entries.map(entry => {
+      if (entry.templateId) return entry;
+      const start = toMinutes(entry.startTime || entry.time);
+      const block = data.weekPlanSlots.find(template =>
+        template.day === WEEKDAY_NAMES[new Date(`${date}T00:00:00`).getDay()] &&
+        Math.abs(toMinutes(template.startTime) - start) < 30
+      );
+      return {
+        id: entry.id || `occurrence-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        templateId: block?.id || '',
+        done: !!entry.done,
+        missed: !!entry.missed,
+        assignedTaskId: entry.assignedTaskId || ''
+      };
+    }).filter(entry => entry.templateId);
+  });
+  if (!data._learningPlanCalendarVersion) data._learningPlanCalendarVersion = 1;
+}
+
+function setLernplanTab(btn, val) {
+  lernplanTab = val;
+  if (val !== 'week' && lpCreateMode) {
+    lpCreateMode = false;
+    document.getElementById('lp-add-block-btn').textContent = '＋ Block hinzufügen';
+    document.getElementById('lp-add-block-btn').classList.remove('success');
+    document.getElementById('lp-create-hint').style.display = 'none';
+  }
+  document.querySelectorAll('.chip[data-lp]').forEach(button => button.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('lp-week-view').style.display = val === 'week' ? 'block' : 'none';
+  document.getElementById('lp-classes-view').style.display = val === 'classes' ? 'block' : 'none';
+  if (val === 'week') renderWeekCalendar();
+  else renderClassList();
+}
+
+function lpTimeMinutes(value) {
+  const [hours, minutes] = String(value || '').split(':').map(Number);
+  return hours * 60 + minutes;
+}
+function lpFormatTime(minutes) {
+  return `${String(Math.floor(minutes / 60)).padStart(2,'0')}:${String(minutes % 60).padStart(2,'0')}`;
+}
+function lpDateDay(date) { return LP_DAY_NAMES[(date.getDay() + 6) % 7]; }
+function lpOccurrencesForDate(dateStr) {
+  if (!Array.isArray(data.weekPlanDays[dateStr])) data.weekPlanDays[dateStr] = [];
+  const date = new Date(`${dateStr}T00:00:00`);
+  const blocks = data.weekPlanSlots.filter(block => block.day === lpDateDay(date));
+  blocks.forEach(block => {
+    if (!data.weekPlanDays[dateStr].some(item => item.templateId === block.id)) {
+      data.weekPlanDays[dateStr].push({
+        id:`occurrence-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        templateId:block.id, done:false, missed:false, assignedTaskId:''
+      });
+    }
+  });
+  data.weekPlanDays[dateStr] = data.weekPlanDays[dateStr].filter(item => blocks.some(block => block.id === item.templateId));
+  return data.weekPlanDays[dateStr];
+}
+function lpEnsureOccurrences(throughDate) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const end = new Date(`${throughDate}T00:00:00`);
+  end.setDate(end.getDate() + 56);
+  const cursor = new Date(today);
+  while (cursor <= end) {
+    lpOccurrencesForDate(fmtDate(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  const visibleStart = new Date(currentWeekStart || getMonday(new Date()));
+  for (let i = 0; i < 7; i++) lpOccurrencesForDate(fmtDate(addDays(visibleStart, i)));
+}
+function lpTaskForUnit(cls, unitIndex) {
+  let remainingIndex = unitIndex;
+  for (const task of cls.tasks) {
+    const remaining = Math.max(0, task.units - task.completedUnits);
+    if (remainingIndex < remaining) return task;
+    remainingIndex -= remaining;
+  }
+  return null;
+}
+function lpRefreshAssignments() {
+  const todayStr = fmtDate(new Date());
+  const occurrences = [];
+  Object.keys(data.weekPlanDays).sort().forEach(dateStr => {
+    if (dateStr < todayStr) return;
+    (data.weekPlanDays[dateStr] || []).forEach(item => {
+      const block = data.weekPlanSlots.find(candidate => candidate.id === item.templateId);
+      const cls = block?.classId ? data.weekPlanClasses.find(candidate => candidate.id === block.classId) : null;
+      if (block && cls) occurrences.push({dateStr,item,block,cls});
+    });
+  });
+  occurrences.sort((a,b) => a.dateStr.localeCompare(b.dateStr) || lpTimeMinutes(a.block.startTime) - lpTimeMinutes(b.block.startTime));
+  data.weekPlanClasses.forEach(cls => {
+    let unitIndex = 0;
+    occurrences.filter(occurrence => occurrence.cls.id === cls.id).forEach(({item}) => {
+      if (item.done) return;
+      const task = lpTaskForUnit(cls, unitIndex);
+      item.assignedTaskId = task?.id || '';
+      if (!item.missed && task) unitIndex++;
+    });
+  });
+}
+
+function renderWeekCalendar() {
+  if (!currentWeekStart) currentWeekStart = getMonday(new Date());
+  const weekEnd = addDays(currentWeekStart, 6);
+  lpEnsureOccurrences(fmtDate(weekEnd));
+  lpRefreshAssignments();
+  document.getElementById('week-range-label').textContent = `${fmtDate(currentWeekStart)} – ${fmtDate(weekEnd)}`;
+  const todayStr = fmtDate(new Date());
+  let html = '<div class="lp-calendar" id="lp-calendar-grid">';
+  html += '<div class="lp-calendar-head"></div>';
+  for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+    const date = addDays(currentWeekStart, dayIndex);
+    const dateStr = fmtDate(date);
+    html += `<div class="lp-calendar-head ${dateStr === todayStr ? 'today' : ''}">${lpDateDay(date)}<small>${dateStr.slice(5)}</small></div>`;
+  }
+  html += '<div class="lp-time-axis">';
+  for (let hour = 6; hour <= 23; hour++) html += `<span class="lp-hour-label" style="top:${(hour - 6) * 60}px">${String(hour).padStart(2,'0')}:00</span>`;
+  html += '</div>';
+  for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+    const date = addDays(currentWeekStart, dayIndex);
+    const dateStr = fmtDate(date);
+    const dayName = lpDateDay(date);
+    const isToday = dateStr === todayStr;
+    html += `<div class="lp-day-column ${isToday ? 'today' : ''} ${lpCreateMode ? 'adding' : ''}" data-day-index="${dayIndex}" data-day="${dayName}" data-date="${dateStr}" onpointerdown="beginCalendarPointer(event,'${dayName}')">`;
+    const blocks = data.weekPlanSlots.filter(block => block.day === dayName).sort((a,b) => lpTimeMinutes(a.startTime) - lpTimeMinutes(b.startTime));
+    blocks.forEach(block => {
+      const occurrence = data.weekPlanDays[dateStr]?.find(item => item.templateId === block.id);
+      const cls = data.weekPlanClasses.find(candidate => candidate.id === block.classId);
+      const task = cls?.tasks.find(candidate => candidate.id === occurrence?.assignedTaskId);
+      const start = lpTimeMinutes(block.startTime);
+      const end = lpTimeMinutes(block.endTime);
+      const top = (start - LP_GRID_START) * LP_MINUTES_PER_PIXEL;
+      const height = (end - start) * LP_MINUTES_PER_PIXEL;
+      const escapedName = escapeHtml(block.name);
+      const classCompleted = cls && cls.tasks.length > 0 && cls.tasks.every(item => item.completedUnits >= item.units);
+      const taskMarkup = task ? `<div class="lp-block-task">${escapeHtml(task.title)} · ${task.completedUnits + 1}/${task.units}</div>` : (classCompleted ? '<div class="lp-block-task">Klasse abgeschlossen</div>' : '');
+      const action = cls && task && occurrence && !occurrence.done
+        ? `<div class="lp-block-actions"><button onclick="event.stopPropagation();completeOccurrence('${dateStr}','${block.id}')">✓ Erledigt</button><button onclick="event.stopPropagation();missOccurrence('${dateStr}','${block.id}')">↷ Verschieben</button></div>`
+        : '';
+      html += `<div class="lp-block ${occurrence?.done ? 'done' : ''}" data-template-id="${block.id}" data-date="${dateStr}" style="top:${top}px;height:${height}px;background:${escapeHtml(block.color)}" onpointerdown="beginBlockPointer(event,'${block.id}')" onclick="handleBlockClick('${block.id}','${dateStr}')">
+        <div class="lp-block-title">${escapedName}</div><div class="lp-block-time">${block.startTime}–${block.endTime}</div>
+        ${block.description ? `<div class="lp-block-description">${escapeHtml(block.description)}</div>` : ''}${taskMarkup}${action}
+        <span class="lp-resize-handle top" onpointerdown="beginBlockResize(event,'${block.id}','start')"></span><span class="lp-resize-handle" onpointerdown="beginBlockResize(event,'${block.id}','end')"></span></div>`;
+    });
+    if (isToday) {
+      const now = new Date();
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      if (nowMinutes >= LP_GRID_START && nowMinutes <= LP_GRID_END) html += `<div class="lp-now-line" style="top:${(nowMinutes - LP_GRID_START) * LP_MINUTES_PER_PIXEL}px"></div>`;
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  document.getElementById('week-calendar').innerHTML = html;
+  saveToLocal();
+}
+function updateCurrentTimeLine() {
+  const line = document.querySelector('.lp-day-column.today .lp-now-line');
+  if (!line) return;
+  const now = new Date();
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  line.style.display = minutes >= LP_GRID_START && minutes <= LP_GRID_END ? '' : 'none';
+  line.style.top = `${(minutes - LP_GRID_START) * LP_MINUTES_PER_PIXEL}px`;
+}
+function shiftWeekView(delta) { currentWeekStart = addDays(currentWeekStart || getMonday(new Date()), delta * 7); renderWeekCalendar(); }
+function jumpToTodayWeek() { currentWeekStart = getMonday(new Date()); renderWeekCalendar(); }
+
+function toggleBlockCreation() {
+  lpCreateMode = !lpCreateMode;
+  const button = document.getElementById('lp-add-block-btn');
+  const hint = document.getElementById('lp-create-hint');
+  if (button) button.textContent = lpCreateMode ? '× Abbrechen' : '＋ Block hinzufügen';
+  if (button) button.classList.toggle('success', lpCreateMode);
+  if (hint) hint.style.display = lpCreateMode ? 'inline' : 'none';
+  if (lernplanTab !== 'week') {
+    document.querySelector('.chip[data-lp="week"]').click();
+    lpCreateMode = true;
+    document.getElementById('lp-add-block-btn').classList.add('success');
+    document.getElementById('lp-create-hint').style.display = 'inline';
+  }
+  renderWeekCalendar();
+}
+function lpSnapMinutes(value) { return Math.max(LP_GRID_START, Math.min(LP_GRID_END, Math.round(value / 30) * 30)); }
+function lpPointerMinutes(event, column) {
+  const rect = column.getBoundingClientRect();
+  return lpSnapMinutes(LP_GRID_START + (event.clientY - rect.top) / LP_MINUTES_PER_PIXEL);
+}
+function beginCalendarPointer(event, day) {
+  if (!lpCreateMode || event.button !== 0 || event.target.closest('.lp-block')) return;
+  event.preventDefault();
+  const column = event.currentTarget;
+  const start = lpPointerMinutes(event, column);
+  lpInteraction = {mode:'create',day,start,end:Math.min(LP_GRID_END,start + 30),originY:event.clientY,column, moved:false};
+  lpShowSelection(lpInteraction);
+}
+function beginBlockPointer(event, blockId) {
+  if (lpCreateMode) return;
+  if (event.button !== 0 || event.target.closest('.lp-resize-handle') || event.target.closest('button')) return;
+  event.preventDefault();
+  const block = data.weekPlanSlots.find(item => item.id === blockId);
+  if (!block) return;
+  const dayColumn = event.currentTarget.parentElement;
+  lpInteraction = {mode:'move',blockId,day:block.day,start:lpTimeMinutes(block.startTime),end:lpTimeMinutes(block.endTime),originalStart:lpTimeMinutes(block.startTime),duration:lpTimeMinutes(block.endTime)-lpTimeMinutes(block.startTime),originY:event.clientY,originX:event.clientX,dayIndex:Number(dayColumn.dataset.dayIndex),moved:false};
+  window.addEventListener('pointermove', handleCalendarPointerMove);
+  window.addEventListener('pointerup', finishCalendarPointer, {once:true});
+}
+function beginBlockResize(event, blockId, edge) {
+  event.stopPropagation();
+  event.preventDefault();
+  const block = data.weekPlanSlots.find(item => item.id === blockId);
+  if (!block) return;
+  lpInteraction = {mode:edge === 'start' ? 'resize-start' : 'resize-end',blockId,day:block.day,start:lpTimeMinutes(block.startTime),end:lpTimeMinutes(block.endTime),originalStart:lpTimeMinutes(block.startTime),originalEnd:lpTimeMinutes(block.endTime),originY:event.clientY,moved:false};
+  window.addEventListener('pointermove', handleCalendarPointerMove);
+  window.addEventListener('pointerup', finishCalendarPointer, {once:true});
+}
+function lpShowSelection(interaction) {
+  document.querySelector('.lp-selection')?.remove();
+  const column = interaction.column;
+  const preview = document.createElement('div');
+  preview.className = 'lp-selection';
+  preview.style.top = `${Math.min(interaction.start,interaction.end) - LP_GRID_START}px`;
+  preview.style.height = `${Math.max(30,Math.abs(interaction.end - interaction.start))}px`;
+  column.appendChild(preview);
+}
+function handleCalendarPointerMove(event) {
+  if (!lpInteraction) return;
+  const interaction = lpInteraction;
+  const delta = Math.round((event.clientY - interaction.originY) / 30) * 30;
+  if (Math.abs(delta) >= 4 || (interaction.originX !== undefined && Math.abs(event.clientX - interaction.originX) > 8)) interaction.moved = true;
+  if (interaction.mode === 'create') {
+    interaction.end = lpPointerMinutes(event,interaction.column);
+    lpShowSelection(interaction);
+  } else if (interaction.mode === 'resize-end') {
+    interaction.end = Math.max(interaction.start + 30, Math.min(LP_GRID_END, lpSnapMinutes(interaction.originalEnd + delta)));
+  } else if (interaction.mode === 'resize-start') {
+    interaction.start = Math.max(LP_GRID_START,Math.min(interaction.originalEnd - 30,lpSnapMinutes(interaction.originalStart + delta)));
+  } else {
+    const target = document.elementFromPoint(event.clientX,event.clientY)?.closest('.lp-day-column');
+    if (target) interaction.day = target.dataset.day;
+    interaction.start = Math.max(LP_GRID_START,Math.min(LP_GRID_END - interaction.duration,lpSnapMinutes(interaction.originalStart + delta)));
+    interaction.end = interaction.start + interaction.duration;
+  }
+}
+function finishCalendarPointer(event) {
+  const interaction = lpInteraction;
+  if (!interaction) return;
+  window.removeEventListener('pointermove',handleCalendarPointerMove);
+  lpInteraction = null;
+  if (interaction.mode === 'create') {
+    document.querySelector('.lp-selection')?.remove();
+    const start = interaction.start === interaction.end ? interaction.start : Math.min(interaction.start,interaction.end);
+    const end = interaction.start === interaction.end ? Math.min(LP_GRID_END,start + 30) : Math.max(interaction.start,interaction.end);
+    if (end > start && !lpHasOverlap(interaction.day,start,end)) {
+      const block = {id:`block-${Date.now()}-${Math.random().toString(36).slice(2)}`,day:interaction.day,startTime:lpFormatTime(start),endTime:lpFormatTime(end),name:'Lernblock',description:'',color:'#f3d8cb',classId:''};
+      data.weekPlanSlots.push(block);
+      lpCreateMode = false;
+      document.getElementById('lp-create-hint').style.display = 'none';
+      document.getElementById('lp-add-block-btn').textContent = '＋ Block hinzufügen';
+      document.getElementById('lp-add-block-btn').classList.remove('success');
+      saveToLocal(); renderWeekCalendar(); openBlockModal(block.id,fmtDate(addDays(currentWeekStart,LP_DAY_NAMES.indexOf(block.day))));
+    } else if (end > start) toast('Dieser Zeitraum ist bereits belegt.');
+    else renderWeekCalendar();
+    return;
+  }
+  if (!interaction.moved) return;
+  lpSuppressClickUntil = Date.now() + 250;
+  const block = data.weekPlanSlots.find(item => item.id === interaction.blockId);
+  if (!block) return;
+  const start = lpTimeMinutes(block.startTime);
+  const end = lpTimeMinutes(block.endTime);
+  const nextStart = interaction.mode === 'resize-end' ? start : interaction.start;
+  const nextEnd = interaction.end;
+  if (lpHasOverlap(interaction.day,nextStart,nextEnd,block.id)) { toast('Dieser Zeitraum ist bereits belegt.'); renderWeekCalendar(); return; }
+  block.day = interaction.day;
+  block.startTime = lpFormatTime(nextStart);
+  block.endTime = lpFormatTime(nextEnd);
+  saveToLocal(); renderWeekCalendar();
+}
+function lpHasOverlap(day,start,end,excludeId='') {
+  return data.weekPlanSlots.some(block => block.id !== excludeId && block.day === day &&
+    start < lpTimeMinutes(block.endTime) && end > lpTimeMinutes(block.startTime));
+}
+window.addEventListener('pointermove',handleCalendarPointerMove);
+window.addEventListener('pointerup',finishCalendarPointer);
+
+function openBlockModal(blockId,dateStr) {
+  if (Date.now() < lpSuppressClickUntil) return;
+  lpBlockEditId = blockId; lpBlockEditDate = dateStr;
+  const block = data.weekPlanSlots.find(item => item.id === blockId);
+  if (!block) return;
+  document.getElementById('block-modal-title').textContent = 'Lernblock bearbeiten';
+  document.getElementById('block-name').value = block.name;
+  document.getElementById('block-description').value = block.description || '';
+  document.getElementById('block-start').value = block.startTime;
+  document.getElementById('block-end').value = block.endTime;
+  document.getElementById('block-color').value = block.color;
+  const select = document.getElementById('block-class');
+  select.innerHTML = '<option value="">Keine Klasse</option>' + data.weekPlanClasses.map(cls => `<option value="${escapeHtml(cls.id)}">${escapeHtml(cls.name)}</option>`).join('');
+  select.value = block.classId || '';
+  const occurrence = data.weekPlanDays[dateStr]?.find(item => item.templateId === blockId);
+  const cls = data.weekPlanClasses.find(candidate => candidate.id === block.classId);
+  const task = cls?.tasks.find(candidate => candidate.id === occurrence?.assignedTaskId);
+  const actions = document.getElementById('block-occurrence-actions');
+  actions.style.display = cls && task && occurrence && !occurrence.done ? 'block' : 'none';
+  document.getElementById('block-assignment').textContent = task ? `Lerneinheit: ${task.title} (${task.completedUnits + 1}/${task.units})` : '';
+  document.getElementById('block-delete-btn').style.display = 'inline-flex';
+  openModal('block-modal');
+}
+function handleBlockClick(blockId,dateStr) { if (!lpCreateMode) openBlockModal(blockId,dateStr); }
+function closeBlockModal() { closeModal('block-modal'); lpBlockEditId = null; lpBlockEditDate = null; }
+function saveBlock() {
+  const block = data.weekPlanSlots.find(item => item.id === lpBlockEditId);
+  if (!block) return;
+  const name = document.getElementById('block-name').value.trim();
+  const start = lpTimeMinutes(document.getElementById('block-start').value);
+  const end = lpTimeMinutes(document.getElementById('block-end').value);
+  if (!name) { toast('Bitte einen Namen für den Block eingeben.'); return; }
+  if (!Number.isFinite(start) || !Number.isFinite(end) || start < LP_GRID_START || end > LP_GRID_END || end - start < 30) { toast('Bitte einen gültigen Zeitraum zwischen 06:00 und 24:00 wählen (mindestens 30 Minuten).'); return; }
+  if (lpHasOverlap(block.day,start,end,block.id)) { toast('Dieser Zeitraum ist bereits belegt.'); return; }
+  block.name = name;
+  block.description = document.getElementById('block-description').value.trim();
+  block.startTime = lpFormatTime(start);
+  block.endTime = lpFormatTime(end);
+  block.color = document.getElementById('block-color').value;
+  block.classId = document.getElementById('block-class').value;
+  saveToLocal(); closeBlockModal(); renderWeekCalendar(); renderClassList(); toast('Block gespeichert');
+}
+function deleteCurrentBlock() {
+  if (!lpBlockEditId || !confirm('Diesen wiederkehrenden Block aus dem Wochenplan entfernen?')) return;
+  const id = lpBlockEditId;
+  data.weekPlanSlots = data.weekPlanSlots.filter(block => block.id !== id);
+  Object.keys(data.weekPlanDays).forEach(date => { data.weekPlanDays[date] = data.weekPlanDays[date].filter(item => item.templateId !== id); });
+  saveToLocal(); closeBlockModal(); renderWeekCalendar(); toast('Block entfernt');
+}
+function completeCurrentOccurrence() { if (lpBlockEditDate && lpBlockEditId) completeOccurrence(lpBlockEditDate,lpBlockEditId); closeBlockModal(); }
+function missCurrentOccurrence() { if (lpBlockEditDate && lpBlockEditId) missOccurrence(lpBlockEditDate,lpBlockEditId); closeBlockModal(); }
+function completeOccurrence(dateStr,blockId) {
+  const block = data.weekPlanSlots.find(item => item.id === blockId);
+  const occurrence = data.weekPlanDays[dateStr]?.find(item => item.templateId === blockId);
+  const cls = data.weekPlanClasses.find(candidate => candidate.id === block?.classId);
+  const task = cls?.tasks.find(candidate => candidate.id === occurrence?.assignedTaskId);
+  if (!block || !occurrence || !cls || !task || occurrence.done) return;
+  if (task.completedUnits >= task.units) { lpRefreshAssignments(); toast('Diese Teilaufgabe ist bereits abgeschlossen.'); return; }
+  task.completedUnits++;
+  occurrence.done = true;
+  occurrence.missed = false;
+  lpRefreshAssignments(); saveToLocal(); renderWeekCalendar(); renderClassList(); toast('Lerneinheit erledigt ✓');
+}
+function missOccurrence(dateStr,blockId) {
+  const occurrence = data.weekPlanDays[dateStr]?.find(item => item.templateId === blockId);
+  if (!occurrence || occurrence.done) return;
+  occurrence.missed = true;
+  lpRefreshAssignments(); saveToLocal(); renderWeekCalendar(); toast('Nicht geschafft – die Klasse rückt einen Termin weiter.');
+}
+
+function openClassModal(classId='') {
+  lpClassEditId = classId || null;
+  const cls = data.weekPlanClasses.find(item => item.id === classId);
+  document.getElementById('class-modal-title').textContent = cls ? 'Klasse bearbeiten' : 'Klasse anlegen';
+  document.getElementById('class-name').value = cls?.name || '';
+  document.getElementById('class-description').value = cls?.description || '';
+  document.getElementById('class-color').value = cls?.color || '#f3d8cb';
+  document.getElementById('class-delete-btn').style.display = cls ? 'inline-flex' : 'none';
+  const editor = document.getElementById('class-task-editor');
+  editor.innerHTML = '';
+  (cls?.tasks || []).forEach(task => addClassTaskRow(task));
+  if (!cls) addClassTaskRow();
+  openModal('class-modal');
+}
+function closeClassModal() { closeModal('class-modal'); lpClassEditId = null; }
+function addClassTaskRow(task={}) {
+  const row = document.createElement('div');
+  row.className = 'lp-task-row';
+  row.dataset.taskId = task.id || `task-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  row.dataset.completed = String(task.completedUnits || 0);
+  row.innerHTML = `<div style="flex:1;min-width:0"><input class="task-title" maxlength="100" placeholder="Teilaufgabe / Rechtsgebiet" value="${escapeHtml(task.title || '')}"><input class="task-description" maxlength="300" placeholder="Beschreibung (optional)" value="${escapeHtml(task.description || '')}" style="margin-top:6px"></div><div style="width:95px"><label style="margin-top:0">Einheiten</label><input class="task-units" type="number" min="1" value="${Math.max(1,Number(task.units || 1))}"><small style="color:var(--ink-tertiary)">${Number(task.completedUnits || 0)} erledigt</small></div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn small" type="button" onclick="moveClassTaskRow(this,-1)" aria-label="Teilaufgabe nach oben">↑</button><button class="btn small" type="button" onclick="moveClassTaskRow(this,1)" aria-label="Teilaufgabe nach unten">↓</button><button class="btn small danger" type="button" onclick="this.parentElement.parentElement.remove()" aria-label="Teilaufgabe entfernen">×</button></div>`;
+  document.getElementById('class-task-editor').appendChild(row);
+}
+function moveClassTaskRow(button,direction) {
+  const row = button.closest('.lp-task-row');
+  if (!row) return;
+  const sibling = direction < 0 ? row.previousElementSibling : row.nextElementSibling;
+  if (!sibling) return;
+  if (direction < 0) row.parentElement.insertBefore(row,sibling);
+  else row.parentElement.insertBefore(sibling,row);
+}
+function saveClass() {
+  const name = document.getElementById('class-name').value.trim();
+  if (!name) { toast('Bitte einen Namen für die Klasse eingeben.'); return; }
+  if (data.weekPlanClasses.some(cls => cls.name.toLowerCase() === name.toLowerCase() && cls.id !== lpClassEditId)) { toast('Eine Klasse mit diesem Namen gibt es bereits.'); return; }
+  const rows = [...document.querySelectorAll('#class-task-editor .lp-task-row')];
+  const tasks = [];
+  for (const row of rows) {
+    const title = row.querySelector('.task-title').value.trim();
+    if (!title) continue;
+    const units = Number(row.querySelector('.task-units').value);
+    const completedUnits = Number(row.dataset.completed || 0);
+    if (!Number.isInteger(units) || units < 1 || units < completedUnits) { toast(`Die Einheiten für „${title}“ müssen mindestens ${completedUnits} betragen.`); return; }
+    tasks.push({id:row.dataset.taskId,title,description:row.querySelector('.task-description').value.trim(),units,completedUnits});
+  }
+  const existing = data.weekPlanClasses.find(cls => cls.id === lpClassEditId);
+  const cls = {id:existing?.id || `class-${Date.now()}-${Math.random().toString(36).slice(2)}`,name,description:document.getElementById('class-description').value.trim(),color:document.getElementById('class-color').value,tasks};
+  if (existing) Object.assign(existing,cls); else data.weekPlanClasses.push(cls);
+  saveToLocal(); closeClassModal(); renderClassList(); renderWeekCalendar(); toast('Klasse gespeichert');
+}
+function deleteCurrentClass() {
+  if (!lpClassEditId || !confirm('Klasse und ihre Teilaufgaben löschen? Die Lernblöcke bleiben im Kalender, verlieren aber ihre Klassenzuordnung.')) return;
+  data.weekPlanClasses = data.weekPlanClasses.filter(cls => cls.id !== lpClassEditId);
+  data.weekPlanSlots.forEach(block => { if (block.classId === lpClassEditId) block.classId = ''; });
+  saveToLocal(); closeClassModal(); renderClassList(); renderWeekCalendar(); toast('Klasse entfernt');
+}
+function renderClassList() {
+  const container = document.getElementById('lp-class-list');
+  if (!container) return;
+  if (!data.weekPlanClasses.length) { container.innerHTML = '<div class="lp-empty">Noch keine Klassen. Lege eine Klasse mit wiederkehrenden Teilaufgaben an.</div>'; return; }
+  container.innerHTML = data.weekPlanClasses.map(cls => {
+    const completed = cls.tasks.reduce((sum,task) => sum + task.completedUnits,0);
+    const total = cls.tasks.reduce((sum,task) => sum + task.units,0);
+    const tasks = cls.tasks.length ? cls.tasks.map(task => `<div class="item-meta" style="margin-top:8px">${escapeHtml(task.title)} · ${task.completedUnits}/${task.units} Einheiten${task.description ? ` — ${escapeHtml(task.description)}` : ''}</div>`).join('') : '<div class="item-meta" style="margin-top:8px">Noch keine Teilaufgaben</div>';
+    return `<div class="lp-class-card" style="border-left-color:${escapeHtml(cls.color)}"><div class="lp-class-head"><div><strong>${escapeHtml(cls.name)}</strong><div class="item-meta">${completed} von ${total} Lerneinheiten erledigt${cls.description ? ` · ${escapeHtml(cls.description)}` : ''}</div>${tasks}</div><button class="btn small" onclick="openClassModal('${cls.id}')">Bearbeiten</button></div></div>`;
+  }).join('');
+}
+
 // ── Notes ──
 function renderNotesList() {
   let notes = data.notes;
@@ -1327,19 +1864,23 @@ function deleteTodo(id) { data.todos = data.todos.filter(x => x.id !== id); save
 function setTodoFilter(btn, val) { todoFilter = val; document.querySelectorAll('.chip[data-tf]').forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderTodos(); }
 
 // ── Modal backdrop clicks ──
-['lec-modal','detail-modal','schedule-modal','subject-queue-modal','weekplan-template-modal','slot-detail-modal','import-modal'].forEach(id => {
+['lec-modal','detail-modal','schedule-modal','block-modal','class-modal','import-modal'].forEach(id => {
   document.getElementById(id).addEventListener('click', e => {
     if (e.target === document.getElementById(id)) {
       closeModal(id);
       if (id === 'lec-modal') lecEditId = null;
       if (id === 'detail-modal') { currentDetailId = null; currentDetailType = null; }
+      if (id === 'block-modal') { lpBlockEditId = null; lpBlockEditDate = null; }
+      if (id === 'class-modal') lpClassEditId = null;
     }
   });
 });
 
 // ── Init ──
+ migrateLearningPlanData();
 renderLectures(); renderSchedule(); renderTodos(); updateDash();
 currentWeekStart = getMonday(new Date());
+setInterval(updateCurrentTimeLine,60000);
 </script>
 </body>
 </html>
