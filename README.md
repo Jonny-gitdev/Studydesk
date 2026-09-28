@@ -1,6 +1,6 @@
 # StudyDesk
 
-A lightweight, single-file web app for organizing university lectures, tasks, and notes — built specifically for law students, but adaptable to any course of study.
+A lightweight, single-file web app for organizing university lectures, learning plans, tasks, and notes across any course of study.
 
 Everything runs locally in your browser. No server, no account, no internet connection required.
 
@@ -28,7 +28,7 @@ The list can be filtered by status (open, done, priority, cancelled). Lectures t
 
 ### Schedule & Automatic Lecture Generation
 
-The **Stundenplan** (schedule) tab lets you define recurring time slots: a subject, a weekday, and a date range for the semester. Once your schedule is set up, clicking **"Verpasste Vorlesungen generieren"** will automatically create lecture entries for every past occurrence within those date ranges — so you don't have to add each week manually.
+The **Stundenplan** (schedule) tab lets you define recurring time slots: a subject, a weekday, and a date range for the semester. Once your schedule is set up, the app automatically creates lecture entries for past occurrences within those date ranges whenever it is opened. You can also click **"Verpasste Vorlesungen generieren"** to run the same operation manually.
 
 This is the core time-saver of the app. Set up your schedule once at the start of semester, and all past lectures are generated in one click. The generator skips entries that already exist, so it's safe to run multiple times.
 
@@ -48,7 +48,7 @@ A free-form note editor with a sidebar for navigation. Notes are searchable by t
 
 ### Dashboard
 
-The first tab gives a quick overview of pending lectures and open to-dos across all subjects, along with counters for your overall progress. It updates in real time as you check things off.
+The first tab gives a quick overview of pending lectures and open to-dos across all subjects, along with counters for your overall progress. It also shows today's learning plan as a calendar with a live current-time marker; learning blocks can be marked as done or missed there. It updates in real time as you check things off.
 
 ### Export & Import
 
