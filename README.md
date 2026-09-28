@@ -8,7 +8,7 @@ Everything runs locally in your browser. No server, no account, no internet conn
 
 ## What it's for
 
-Keeping track of university life across multiple subjects is messy. StudyDesk gives you one place to log your lectures, mark which ones you've caught up on, manage to-dos per subject, and keep free-form notes — all without any setup or external dependencies. Because it's a single HTML file, you can just download it, open it, and start using it.
+Keeping track of university life across multiple subjects is messy. StudyDesk gives you one place to log your lectures, mark which ones you've caught up on, manage to-dos per subject, and keep free-form notes — all without any setup or external dependencies. Open `index.html` in a browser to get started; the other sections are available through the navigation.
 
 Your data is stored in your browser's `localStorage` and can be exported and imported as a JSON file at any time, so you never lose anything.
 
@@ -60,4 +60,4 @@ Your data can be exported as a `.json` file at any time via the **Export** butto
 
 Feature suggestions are very welcome — feel free to open an issue describing what you'd have in mind.
 
-Pull requests are also appreciated. The one thing to keep in mind: StudyDesk is intentionally simple. It's a single HTML file with no build step, no framework, no dependencies. Contributions that add genuinely useful functionality are great; contributions that add complexity for its own sake, or that require introducing a build pipeline or external libraries, are unlikely to be merged. If in doubt, open an issue first to discuss.
+Pull requests are also appreciated. The one thing to keep in mind: StudyDesk is intentionally simple. It uses static HTML, CSS, and JavaScript with no build step, framework, or external dependencies. Contributions that add genuinely useful functionality are great; contributions that add complexity for its own sake, or that require introducing a build pipeline or external libraries, are unlikely to be merged. If in doubt, open an issue first to discuss.
