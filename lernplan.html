@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="styles.css">
 <base target="_blank">
 </head>
-<body data-section="dashboard">
+<body data-section="lernplan">
 
 <div class="app">
   <aside class="sidebar">
@@ -16,10 +16,10 @@
       <div><div class="brand-text">StudyDesk</div><div class="brand-sub">Studienplaner</div></div>
     </div>
     <nav class="nav-group">
-      <a class="nav-item nav-link active" data-section="dashboard" href="index.html" target="_self"><span class="nav-icon">📊</span>Übersicht</a>
+      <a class="nav-item nav-link" data-section="dashboard" href="index.html" target="_self"><span class="nav-icon">📊</span>Übersicht</a>
       <a class="nav-item nav-link" data-section="lectures" href="lectures.html" target="_self"><span class="nav-icon">📚</span>Vorlesungen</a>
       <a class="nav-item nav-link" data-section="schedule" href="schedule.html" target="_self"><span class="nav-icon">🗓️</span>Stundenplan</a>
-      <a class="nav-item nav-link" data-section="lernplan" href="lernplan.html" target="_self"><span class="nav-icon">🎯</span>Lernplan</a>
+      <a class="nav-item nav-link active" data-section="lernplan" href="lernplan.html" target="_self"><span class="nav-icon">🎯</span>Lernplan</a>
       <a class="nav-item nav-link" data-section="notes" href="notes.html" target="_self"><span class="nav-icon">📝</span>Notizen</a>
       <a class="nav-item nav-link" data-section="todos" href="todos.html" target="_self"><span class="nav-icon">✅</span>Aufgaben</a>
     </nav>
@@ -31,7 +31,7 @@
   <div class="main">
     <header class="topbar">
       <div class="topbar-left">
-        <h1 class="page-title" id="page-title">Übersicht</h1>
+        <h1 class="page-title" id="page-title">Lernplan</h1>
         <span class="date-chip" id="date-display"></span>
       </div>
       <div class="topbar-actions">
@@ -39,32 +39,32 @@
       </div>
     </header>
     <div class="content">
-      <div class="section active" id="sec-dashboard">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-label">Vorlesungen</div>
-            <div class="stat-value" id="dash-total">0</div>
-            <div class="stat-sub" id="dash-done-text">0 nachgeholt</div>
-            <div class="progress-track"><div class="progress-fill" id="dash-prog" style="width:0%"></div></div>
-          </div>
-          <div class="stat-card success">
-            <div class="stat-label">Offene Aufgaben</div>
-            <div class="stat-value" id="dash-tasks">0</div>
-            <div class="stat-sub" id="dash-done-tasks">0 erledigt</div>
-          </div>
-          <div class="stat-card info">
-            <div class="stat-label">Notizen</div>
-            <div class="stat-value" id="dash-notes">0</div>
-            <div class="stat-sub" id="dash-research">0 Recherche-Tags</div>
-          </div>
+      <div class="section active" id="sec-lernplan">
+        <div class="filter-row">
+          <button class="chip active" data-lp="week" onclick="setLernplanTab(this,'week')">🗓️ Wochenkalender</button>
+          <button class="chip" data-lp="classes" onclick="setLernplanTab(this,'classes')">📚 Klassen & Aufgaben</button>
         </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Offene Vorlesungen</div></div>
-          <div id="dash-next-list"></div>
+        <div class="guide-grid">
+          <div class="guide-step"><strong>1. Wochenplan gestalten</strong><small>Ziehe Blöcke in freie Zeiten oder nutze „Block hinzufügen“. Dauer und Wochentag lassen sich direkt im Kalender anpassen.</small></div>
+          <div class="guide-step"><strong>2. Klassen konfigurieren</strong><small>Ordne Blöcke einer Klasse zu und lege Teilaufgaben samt benötigten Lerneinheiten fest.</small></div>
+          <div class="guide-step"><strong>3. Fortschritt festhalten</strong><small>Erledigte Einheiten schalten die nächste Teilaufgabe frei. Bei „Nicht geschafft“ rückt der Klassenplan um einen Termin weiter.</small></div>
         </div>
-        <div class="card mt-4">
-          <div class="card-header"><div class="card-title">Offene Aufgaben</div></div>
-          <div id="dash-todos-list"></div>
+        <div id="lp-week-view">
+          <div class="lp-toolbar">
+            <button class="btn primary" id="lp-add-block-btn" onclick="toggleBlockCreation()">＋ Block hinzufügen</button>
+            <button class="btn" onclick="openClassModal()">⚙ Klassen verwalten</button>
+            <span id="lp-create-hint" class="lp-create-hint" style="display:none;">Freie Zeit anklicken und ziehen</span>
+            <span style="flex:1"></span>
+            <button class="btn" onclick="shiftWeekView(-1)">‹</button>
+            <span id="week-range-label" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent);font-weight:600;"></span>
+            <button class="btn" onclick="shiftWeekView(1)">›</button>
+            <button class="btn small" onclick="jumpToTodayWeek()">Heute</button>
+          </div>
+          <div id="week-calendar" class="lp-calendar-scroll"></div>
+        </div>
+        <div id="lp-classes-view" style="display:none;">
+          <div class="toolbar"><button class="btn primary" onclick="openClassModal()">＋ Klasse anlegen</button></div>
+          <div id="lp-class-list"></div>
         </div>
       </div>
 
@@ -72,10 +72,10 @@
   </div>
 </div>
 <div class="mobile-nav">
-  <a class="nav-item nav-link active" data-section="dashboard" href="index.html" target="_self">📊</a>
+  <a class="nav-item nav-link" data-section="dashboard" href="index.html" target="_self">📊</a>
   <a class="nav-item nav-link" data-section="lectures" href="lectures.html" target="_self">📚</a>
   <a class="nav-item nav-link" data-section="schedule" href="schedule.html" target="_self">🗓️</a>
-  <a class="nav-item nav-link" data-section="lernplan" href="lernplan.html" target="_self">🎯</a>
+  <a class="nav-item nav-link active" data-section="lernplan" href="lernplan.html" target="_self">🎯</a>
   <a class="nav-item nav-link" data-section="notes" href="notes.html" target="_self">📝</a>
   <a class="nav-item nav-link" data-section="todos" href="todos.html" target="_self">✅</a>
 </div>
