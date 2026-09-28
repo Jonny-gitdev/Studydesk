@@ -65,8 +65,8 @@
 <div class="modal-bg" id="lec-modal">
   <div class="modal">
     <h2 id="lec-modal-title">Vorlesung hinzufügen</h2>
-    <label>Rechtsgebiet / Fach</label>
-    <input type="text" id="lec-m-subject" list="subject-datalist" autocomplete="off" placeholder="z.B. BGB AT">
+    <label>Thema / Vorlesung</label>
+    <input type="text" id="lec-m-subject" list="subject-datalist" autocomplete="off" placeholder="z. B. Biologie 1">
     <datalist id="subject-datalist"></datalist>
     <label>Datum</label>
     <input type="date" id="lec-m-date">
@@ -89,8 +89,8 @@
 <div class="modal-bg" id="schedule-modal">
   <div class="modal">
     <h2>Stundenplan – Regelmäßiger Termin</h2>
-    <label>Rechtsgebiet</label>
-    <input type="text" id="sched-subject" placeholder="z.B. BGB AT">
+    <label>Vorlesung / Thema</label>
+    <input type="text" id="sched-subject" placeholder="z. B. Biologie 1">
     <label>Wochentag</label>
     <select id="sched-day"><option>Montag</option><option>Dienstag</option><option>Mittwoch</option><option>Donnerstag</option><option>Freitag</option><option>Samstag</option><option>Sonntag</option></select>
     <label>Zeitraum (Start – Ende)</label>
@@ -103,7 +103,7 @@
 <div class="modal-bg" id="block-modal">
   <div class="modal">
     <h2 id="block-modal-title">Lernblock bearbeiten</h2>
-    <label>Name</label><input id="block-name" maxlength="100" placeholder="z. B. BGB AT nacharbeiten">
+    <label>Name</label><input id="block-name" maxlength="100" placeholder="z. B. Vorlesung nacharbeiten">
     <label>Beschreibung</label><textarea id="block-description" rows="3" placeholder="Was möchtest du in diesem Block erledigen?"></textarea>
     <div class="flex gap-2">
       <div style="flex:1"><label>Beginn</label><input type="time" id="block-start" min="06:00" max="23:30" step="1800"></div>
@@ -128,7 +128,7 @@
 <div class="modal-bg" id="class-modal">
   <div class="modal" style="width:680px">
     <h2 id="class-modal-title">Klasse anlegen</h2>
-    <label>Name der Klasse</label><input id="class-name" maxlength="100" placeholder="z. B. Jura-Rechtsgebiete">
+    <label>Name der Klasse</label><input id="class-name" maxlength="100" placeholder="z. B. Biologie-Grundlagen">
     <label>Beschreibung</label><textarea id="class-description" rows="2" placeholder="Wiederkehrende Lernreihe beschreiben (optional)"></textarea>
     <label>Farbe</label><input type="color" id="class-color" class="lp-color-input" value="#f3d8cb">
     <label class="checkbox-label" style="margin-top:16px;"><input type="checkbox" id="class-loop"> Zyklus wiederholen, wenn alle Teilaufgaben durchlaufen sind</label>

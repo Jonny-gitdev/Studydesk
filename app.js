@@ -17,7 +17,7 @@ let lernplanSubjectEditId = null;
 let currentNote = null, lecEditId = null, lecFilter = 'all', todoFilter = 'all', noteFilter = '', saveTimer = null;
 let currentDetailId = null, currentDetailType = null, draggedQueueId = null;
 
-const TYPE_LABELS = { rechtsgebiet: 'Rechtsgebiet nacharbeiten', klausur: 'Klausur schreiben', karteikarten: 'Karteikarten lernen', frei: 'Frei / Sonstiges' };
+const TYPE_LABELS = { rechtsgebiet: 'Thema nacharbeiten', klausur: 'Klausur schreiben', karteikarten: 'Karteikarten lernen', frei: 'Frei / Sonstiges' };
 const WEEKDAY_NAMES = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 const SECTION_TITLES = { dashboard:'Übersicht', lectures:'Vorlesungen', schedule:'Stundenplan', lernplan:'Lernplan', notes:'Notizen', todos:'Aufgaben' };
 const SECTION_ACTIONS = { dashboard:null, lectures:'openLecModal', schedule:'openScheduleModal', lernplan:'toggleBlockCreation', notes:'newNote', todos:'addTodo' };
@@ -112,6 +112,48 @@ function updateDash() {
   document.getElementById('dash-todos-list').innerHTML = allOpenTodos.length
     ? allOpenTodos.map(t => `<div class="list-item" onclick="showTodoDetail('${t.id}')" style="padding:10px 14px;margin-bottom:6px;"><div class="item-check ${t.done?'checked':''}" style="margin-top:0;" onclick="event.stopPropagation();toggleTodo('${t.id}')"></div><div class="item-body"><div class="item-title">${escapeHtml(t.text)}</div><div class="item-meta">${t.subject||'kein Fach'}</div></div></div>`).join('')
     : '<div class="empty-state"><div class="empty-state-icon">✅</div>Keine offenen Aufgaben</div>';
+  renderDashboardLearningPlan();
+}
+function renderDashboardLearningPlan() {
+  const container = document.getElementById('dash-plan-calendar');
+  if (!container) return;
+  const today = new Date();
+  const todayStr = fmtDate(today);
+  const previousPlan = JSON.stringify({days:data.weekPlanDays,classes:data.weekPlanClasses});
+  const occurrences = lpOccurrencesForDate(todayStr);
+  lpRefreshAssignments();
+  if (JSON.stringify({days:data.weekPlanDays,classes:data.weekPlanClasses}) !== previousPlan) {
+    localStorage.setItem('studydesk_pro',JSON.stringify(data));
+  }
+
+  const blocks = data.weekPlanSlots
+    .filter(block => block.day === lpDateDay(today))
+    .sort((a,b) => lpTimeMinutes(a.startTime) - lpTimeMinutes(b.startTime));
+  let html = `<div class="dash-day-calendar"><div class="dash-day-head">${escapeHtml(today.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'}))}</div><div class="dash-time-axis">`;
+  for (let hour = 8; hour < 20; hour++) {
+    html += `<span class="dash-hour-label" style="top:${(hour - 8) * 60}px">${String(hour).padStart(2,'0')}:00</span>`;
+  }
+  html += '</div><div class="dash-day-column today">';
+  blocks.forEach(block => {
+    const occurrence = occurrences.find(item => item.templateId === block.id);
+    if (!occurrence) return;
+    const start = lpTimeMinutes(block.startTime);
+    const end = lpTimeMinutes(block.endTime);
+    const task = data.weekPlanClasses.find(cls => cls.id === block.classId)?.tasks.find(item => item.id === occurrence.assignedTaskId);
+    const status = occurrence.done ? 'done' : occurrence.missed ? 'missed' : '';
+    const statusMarkup = occurrence.done
+      ? '<span class="dash-plan-status done">✓ Erledigt</span>'
+      : occurrence.missed
+        ? '<span class="dash-plan-status missed">↷ Nicht geschafft</span>'
+        : `<div class="dash-plan-actions"><button title="Als erledigt markieren" aria-label="${escapeHtml(block.name)} als erledigt markieren" onclick="completeOccurrence('${todayStr}','${block.id}')">✓</button><button title="Als nicht geschafft markieren" aria-label="${escapeHtml(block.name)} als nicht geschafft markieren" onclick="missOccurrence('${todayStr}','${block.id}')">↷</button></div>`;
+    const taskMarkup = task && end - start >= 48 ? `<div class="dash-plan-task">${escapeHtml(task.title)}</div>` : '';
+    html += `<div class="dash-plan-block ${status}" style="top:${start - 480}px;height:${end - start}px;background:${escapeHtml(block.color)}"><div class="dash-plan-header"><div class="dash-plan-title">${escapeHtml(block.name)}</div>${statusMarkup}</div><div class="dash-plan-time">${escapeHtml(block.startTime)}–${escapeHtml(block.endTime)}</div>${taskMarkup}</div>`;
+  });
+  const nowMinutes = today.getHours() * 60 + today.getMinutes();
+  if (nowMinutes >= 480 && nowMinutes <= 1200) html += `<div class="dash-now-line" style="top:${nowMinutes - 480}px"></div>`;
+  if (!blocks.length) html += '<div class="dash-plan-empty">Für heute sind keine Lernblöcke geplant.</div>';
+  html += '</div></div>';
+  container.innerHTML = html;
 }
 
 // ── Lectures ──
@@ -151,7 +193,7 @@ function renderLectures() {
     </div>
   </div>`).join('');
   const subjects = [...new Set(data.lectures.map(l => l.subject).filter(Boolean))];
-  const sel = document.getElementById('lec-filter-subject'); if(sel) sel.innerHTML = '<option value="">Alle Rechtsgebiete</option>' + subjects.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+  const sel = document.getElementById('lec-filter-subject'); if(sel) sel.innerHTML = '<option value="">Alle Themen</option>' + subjects.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
   updateSubjectDatalist();
 }
 function openLecModal(id) {
@@ -179,7 +221,7 @@ function openLecModal(id) {
 function closeLecModal() { closeModal('lec-modal'); lecEditId = null; }
 function saveLec() {
   const subject = document.getElementById('lec-m-subject').value.trim();
-  if (!subject) { toast('Bitte ein Rechtsgebiet eingeben.'); return; }
+  if (!subject) { toast('Bitte ein Thema eingeben.'); return; }
   const dateRaw = document.getElementById('lec-m-date').value;
   const cancelled = document.getElementById('lec-m-cancelled').checked;
   if (lecEditId) {
@@ -214,7 +256,7 @@ function showLectureDetail(id) {
   document.getElementById('detail-title').innerText = '📘 Vorlesungsdetails';
   document.getElementById('detail-content').innerHTML = `
     <div class="detail-row"><div class="detail-label">Titel</div><div style="font-size:16px;color:var(--accent);font-weight:600;">${escapeHtml(lec.title)}</div></div>
-    <div class="detail-row"><div class="detail-label">Rechtsgebiet</div><div class="detail-value">${escapeHtml(lec.subject)||'—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Thema / Vorlesung</div><div class="detail-value">${escapeHtml(lec.subject)||'—'}</div></div>
     <div class="detail-row"><div class="detail-label">Datum</div><div class="detail-value">${lec.date||'Kein Datum'}</div></div>
     <div class="detail-row"><div class="detail-label">Priorität</div><div class="detail-value">${lec.prio?'⭐ Hoch':'Normal'}</div></div>
     <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value">${lec.cancelled?'🚫 Ausgefallen':(lec.done?'✅ Erledigt':'⏳ Offen')}</div></div>
@@ -270,7 +312,7 @@ function openScheduleModal() { openModal('schedule-modal'); document.getElementB
 function closeScheduleModal() { closeModal('schedule-modal'); }
 function saveScheduleEntry() {
   const subject = document.getElementById('sched-subject').value.trim();
-  if (!subject) { toast('Rechtsgebiet erforderlich'); return; }
+  if (!subject) { toast('Thema oder Vorlesung erforderlich'); return; }
   const startDate = document.getElementById('sched-start').value;
   const endDate = document.getElementById('sched-end').value;
   if (!startDate || !endDate) { toast('Bitte Start- und Enddatum angeben'); return; }
@@ -279,7 +321,7 @@ function saveScheduleEntry() {
 }
 function deleteScheduleEntry(id) { if(confirm('Termin löschen?')) { data.schedule = data.schedule.filter(e => e.id !== id); saveToLocal(); renderSchedule(); toast('Entfernt'); } }
 
-function generatePastLecturesFromSchedule() {
+function generatePastLecturesFromSchedule(quiet = false) {
   const today = new Date(); today.setHours(0,0,0,0);
   const weekdays = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
   let created = 0;
@@ -304,8 +346,9 @@ function generatePastLecturesFromSchedule() {
       current.setDate(current.getDate()+1);
     }
   }
-  saveToLocal(); renderLectures(); updateDash();
-  toast(`${created} neue Vorlesungen generiert.`);
+  saveToLocal();
+  if (document.getElementById('lecture-list')) renderLectures();
+  if (!quiet) toast(`${created} neue Vorlesungen generiert.`);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -358,7 +401,7 @@ function recalcQueueRemaining() {
 // ── Queue ──
 function openSubjectQueueModal() {
   lernplanSubjectEditId = null;
-  document.getElementById('sq-modal-title').innerText = 'Rechtsgebiet zur Warteschlange';
+  document.getElementById('sq-modal-title').innerText = 'Thema zur Warteschlange';
   document.getElementById('sq-subject').value = '';
   document.getElementById('sq-units').value = 1;
   openModal('subject-queue-modal');
@@ -368,7 +411,7 @@ function closeSubjectQueueModal() { closeModal('subject-queue-modal'); }
 function editSubjectQueueEntry(id) {
   const e = data.subjectQueue.find(x => x.id === id); if(!e) return;
   lernplanSubjectEditId = id;
-  document.getElementById('sq-modal-title').innerText = 'Rechtsgebiet bearbeiten';
+  document.getElementById('sq-modal-title').innerText = 'Thema bearbeiten';
   document.getElementById('sq-subject').value = e.subject;
   document.getElementById('sq-units').value = e.units;
   openModal('subject-queue-modal');
@@ -376,7 +419,7 @@ function editSubjectQueueEntry(id) {
 function saveSubjectQueueEntry() {
   const subject = document.getElementById('sq-subject').value.trim();
   const units = parseInt(document.getElementById('sq-units').value, 10);
-  if (!subject) { toast('Bitte ein Rechtsgebiet eingeben.'); return; }
+  if (!subject) { toast('Bitte ein Thema eingeben.'); return; }
   if (!units || units < 1) { toast('Bitte gültige Anzahl eingeben.'); return; }
   if (lernplanSubjectEditId) {
     const e = data.subjectQueue.find(x => x.id === lernplanSubjectEditId);
@@ -392,7 +435,7 @@ function saveSubjectQueueEntry() {
   toast('Gespeichert');
 }
 function deleteSubjectQueueEntry(id) {
-  if (!confirm('Rechtsgebiet entfernen?')) return;
+  if (!confirm('Thema entfernen?')) return;
   data.subjectQueue = data.subjectQueue.filter(x => x.id !== id);
   saveToLocal(); renderSubjectQueue(); toast('Entfernt');
 }
@@ -417,7 +460,7 @@ function dropQueueEntry(targetId) {
 function renderSubjectQueue() {
   recalcQueueRemaining(); // immer aktuell halten
   const container = document.getElementById('subject-queue-list');
-  if (!data.subjectQueue.length) { container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div>Keine Rechtsgebiete in der Warteschlange</div>'; return; }
+  if (!data.subjectQueue.length) { container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div>Keine Themen in der Warteschlange</div>'; return; }
   container.innerHTML = data.subjectQueue.map((e, i) => {
     const isActive = e.remaining > 0 && data.subjectQueue.slice(0, i).every(prev => prev.remaining <= 0);
     const pct = e.units ? ((e.units - e.remaining) / e.units) * 100 : 0;
@@ -663,7 +706,7 @@ function renderWeekCalendar() {
     } else {
       html += slots.map(s => {
         const label = s.type === 'rechtsgebiet' 
-          ? (s.subject ? `Nacharbeiten: ${escapeHtml(s.subject)}` : 'Rechtsgebiet nacharbeiten (Warteschlange leer)')
+          ? (s.subject ? `Nacharbeiten: ${escapeHtml(s.subject)}` : 'Thema nacharbeiten (Warteschlange leer)')
           : escapeHtml(s.label);
         const typeClass = s.type === 'klausur' ? 'type-klausur' : s.type === 'karteikarten' ? 'type-karteikarten' : s.type === 'frei' ? 'type-frei' : '';
         return `<div class="week-slot ${typeClass} ${s.done?'slot-done':''}" onclick="openSlotDetail('${dateStr}','${s.id}')">
@@ -694,7 +737,7 @@ function openSlotDetail(dateStr, slotId) {
 }
 function toggleSlotLabelField() {
   const type = document.getElementById('slot-m-type').value;
-  document.getElementById('slot-m-label-wrap').textContent = type === 'rechtsgebiet' ? 'Zugewiesenes Rechtsgebiet' : 'Bezeichnung';
+  document.getElementById('slot-m-label-wrap').textContent = type === 'rechtsgebiet' ? 'Zugewiesenes Thema' : 'Bezeichnung';
 }
 function closeSlotDetailModal() { closeModal('slot-detail-modal'); currentSlotDate = null; currentSlotId = null; }
 
@@ -859,7 +902,7 @@ function migrateLearningPlanData() {
       day: LP_DAY_NAMES.includes(slot.day) ? slot.day : 'Montag',
       startTime: formatTime(start),
       endTime: formatTime(end),
-      name: String(slot.name || slot.label || (slot.type === 'rechtsgebiet' ? 'Rechtsgebiet nacharbeiten' : TYPE_LABELS[slot.type] || 'Lernblock')),
+      name: String(slot.name || slot.label || (slot.type === 'rechtsgebiet' ? 'Thema nacharbeiten' : TYPE_LABELS[slot.type] || 'Lernblock')),
       description: String(slot.description || ''),
       color: /^#[0-9a-f]{6}$/i.test(slot.color || '') ? slot.color : '#f3d8cb',
       classId: linkedClass?.id || legacyClass?.id || ''
@@ -1044,11 +1087,25 @@ function renderWeekCalendar() {
 }
 function updateCurrentTimeLine() {
   const line = document.querySelector('.lp-day-column.today .lp-now-line');
-  if (!line) return;
   const now = new Date();
   const minutes = now.getHours() * 60 + now.getMinutes();
-  line.style.display = minutes >= LP_GRID_START && minutes <= LP_GRID_END ? '' : 'none';
-  line.style.top = `${(minutes - LP_GRID_START) * LP_MINUTES_PER_PIXEL}px`;
+  if (line) {
+    line.style.display = minutes >= LP_GRID_START && minutes <= LP_GRID_END ? '' : 'none';
+    line.style.top = `${(minutes - LP_GRID_START) * LP_MINUTES_PER_PIXEL}px`;
+  }
+  const dashboardLine = document.querySelector('.dash-day-column.today .dash-now-line');
+  if (dashboardLine) {
+    dashboardLine.style.display = minutes >= 480 && minutes <= 1200 ? '' : 'none';
+    dashboardLine.style.top = `${minutes - 480}px`;
+  } else if (minutes >= 480 && minutes <= 1200) {
+    const dashboardColumn = document.querySelector('.dash-day-column.today');
+    if (dashboardColumn) {
+      const newLine = document.createElement('div');
+      newLine.className = 'dash-now-line';
+      newLine.style.top = `${minutes - 480}px`;
+      dashboardColumn.appendChild(newLine);
+    }
+  }
 }
 function shiftWeekView(delta) { currentWeekStart = addDays(currentWeekStart || getMonday(new Date()), delta * 7); renderWeekCalendar(); }
 function jumpToTodayWeek() { currentWeekStart = getMonday(new Date()); renderWeekCalendar(); }
@@ -1275,19 +1332,26 @@ function completeOccurrence(dateStr,blockId) {
   const occurrence = data.weekPlanDays[dateStr]?.find(item => item.templateId === blockId);
   const cls = data.weekPlanClasses.find(candidate => candidate.id === block?.classId);
   const task = cls?.tasks.find(candidate => candidate.id === occurrence?.assignedTaskId);
-  if (!block || !occurrence || !cls || !task || occurrence.done) return;
-  if (task.completedUnits >= task.units) { lpRefreshAssignments(); toast('Diese Teilaufgabe ist bereits abgeschlossen.'); return; }
-  task.completedUnits++;
-  if (cls.loop) lpResetClassLoop(cls);
+  if (!block || !occurrence || occurrence.done || occurrence.missed) return;
+  if (cls && task) {
+    if (task.completedUnits >= task.units) { lpRefreshAssignments(); toast('Diese Teilaufgabe ist bereits abgeschlossen.'); return; }
+    task.completedUnits++;
+    if (cls.loop) lpResetClassLoop(cls);
+  }
   occurrence.done = true;
   occurrence.missed = false;
-  lpRefreshAssignments(); saveToLocal(); renderWeekCalendar(); renderClassList(); toast('Lerneinheit erledigt ✓');
+  lpRefreshAssignments(); saveToLocal();
+  if (document.getElementById('sec-lernplan')) { renderWeekCalendar(); renderClassList(); }
+  toast('Lernblock erledigt ✓');
 }
 function missOccurrence(dateStr,blockId) {
+  const block = data.weekPlanSlots.find(item => item.id === blockId);
   const occurrence = data.weekPlanDays[dateStr]?.find(item => item.templateId === blockId);
-  if (!occurrence || occurrence.done) return;
+  if (!occurrence || occurrence.done || occurrence.missed) return;
   occurrence.missed = true;
-  lpRefreshAssignments(); saveToLocal(); renderWeekCalendar(); toast('Nicht geschafft – die Klasse rückt einen Termin weiter.');
+  lpRefreshAssignments(); saveToLocal();
+  if (document.getElementById('sec-lernplan')) { renderWeekCalendar(); renderClassList(); }
+  toast(block?.classId ? 'Nicht geschafft – die Klasse rückt einen Termin weiter.' : 'Lernblock als nicht geschafft markiert.');
 }
 
 function openClassModal(classId='') {
@@ -1311,7 +1375,7 @@ function addClassTaskRow(task={}) {
   row.className = 'lp-task-row';
   row.dataset.taskId = task.id || `task-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   row.dataset.completed = String(task.completedUnits || 0);
-  row.innerHTML = `<div style="flex:1;min-width:0"><input class="task-title" maxlength="100" placeholder="Teilaufgabe / Rechtsgebiet" value="${escapeHtml(task.title || '')}"><input class="task-description" maxlength="300" placeholder="Beschreibung (optional)" value="${escapeHtml(task.description || '')}" style="margin-top:6px"></div><div style="width:95px"><label style="margin-top:0">Einheiten</label><input class="task-units" type="number" min="1" value="${Math.max(1,Number(task.units || 1))}"><small style="color:var(--ink-tertiary)">${Number(task.completedUnits || 0)} erledigt</small></div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn small" type="button" onclick="moveClassTaskRow(this,-1)" aria-label="Teilaufgabe nach oben">↑</button><button class="btn small" type="button" onclick="moveClassTaskRow(this,1)" aria-label="Teilaufgabe nach unten">↓</button><button class="btn small danger" type="button" onclick="this.parentElement.parentElement.remove()" aria-label="Teilaufgabe entfernen">×</button></div>`;
+  row.innerHTML = `<div style="flex:1;min-width:0"><input class="task-title" maxlength="100" placeholder="Teilaufgabe / Thema" value="${escapeHtml(task.title || '')}"><input class="task-description" maxlength="300" placeholder="Beschreibung (optional)" value="${escapeHtml(task.description || '')}" style="margin-top:6px"></div><div style="width:95px"><label style="margin-top:0">Einheiten</label><input class="task-units" type="number" min="1" value="${Math.max(1,Number(task.units || 1))}"><small style="color:var(--ink-tertiary)">${Number(task.completedUnits || 0)} erledigt</small></div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn small" type="button" onclick="moveClassTaskRow(this,-1)" aria-label="Teilaufgabe nach oben">↑</button><button class="btn small" type="button" onclick="moveClassTaskRow(this,1)" aria-label="Teilaufgabe nach unten">↓</button><button class="btn small danger" type="button" onclick="this.parentElement.parentElement.remove()" aria-label="Teilaufgabe entfernen">×</button></div>`;
   document.getElementById('class-task-editor').appendChild(row);
 }
 function moveClassTaskRow(button,direction) {
@@ -1481,4 +1545,5 @@ function setTodoFilter(btn, val) { todoFilter = val; document.querySelectorAll('
  migrateLearningPlanData();
 currentWeekStart = getMonday(new Date());
 initializeCurrentPage();
+generatePastLecturesFromSchedule(true);
 setInterval(updateCurrentTimeLine,60000);
