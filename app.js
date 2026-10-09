@@ -1503,9 +1503,9 @@ function missOccurrence(dateStr,blockId) {
 
 function renderClassLectureSelector(cls) {
   const container = document.getElementById('class-lecture-selector');
-  const lectures = Array.isArray(data.lectures) ? data.lectures : [];
+  const lectures = (Array.isArray(data.lectures) ? data.lectures : []).filter(lecture => !lecture.done && !lecture.cancelled);
   if (!lectures.length) {
-    container.innerHTML = '<div class="text-muted" style="font-size:13px">Lege zuerst im Bereich Vorlesungen Einträge an.</div>';
+    container.innerHTML = '<div class="text-muted" style="font-size:13px">Keine offenen Vorlesungen verfügbar.</div>';
     return;
   }
   const selected = new Set(cls?.lectureIds || []);
@@ -1527,7 +1527,12 @@ function renderClassLectureSelector(cls) {
 function renderClassLectureTaskPreview() {
     const container = document.getElementById('class-linked-lecture-tasks');
     const currentClass = data.weekPlanClasses.find(item => item.id === lpClassEditId);
-    const selected = [...document.querySelectorAll('#class-lecture-selector .class-lecture-choice:checked')];
+    const selectedIds = new Set([...document.querySelectorAll('#class-lecture-selector .class-lecture-choice:checked')].map(input => input.value));
+    (currentClass?.lectureIds || []).forEach(id => {
+      const lecture = data.lectures.find(item => String(item.id) === String(id));
+      if (lecture?.done || lecture?.cancelled) selectedIds.add(String(id));
+    });
+    const selected = [...selectedIds].map(id => data.lectures.find(item => String(item.id) === id)).filter(Boolean);
     const groups = new Map();
     selected.forEach(input => {
       const lecture = data.lectures.find(item => String(item.id) === input.value);
@@ -1620,7 +1625,13 @@ function saveClass() {
     manualTasks.push({id:row.dataset.taskId,title,description:row.querySelector('.task-description').value.trim(),units,completedUnits,durationMinutes:taskDuration});
   }
   const existing = data.weekPlanClasses.find(cls => cls.id === lpClassEditId);
-  const lectureIds = [...document.querySelectorAll('#class-lecture-selector .class-lecture-choice:checked')].map(input => input.value);
+  const lectureIds = [...new Set([
+    ...[...document.querySelectorAll('#class-lecture-selector .class-lecture-choice:checked')].map(input => input.value),
+    ...(existing?.lectureIds || []).filter(id => {
+      const lecture = data.lectures.find(item => String(item.id) === String(id));
+      return lecture?.done || lecture?.cancelled;
+    }).map(String)
+  ])];
   const selectedLectures = lectureIds.map(lectureId => data.lectures.find(item => String(item.id) === lectureId)).filter(Boolean);
   const lectureGroups = new Map();
   selectedLectures.forEach(lecture => {
