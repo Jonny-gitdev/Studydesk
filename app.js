@@ -138,8 +138,8 @@ function renderDashboardLearningPlan() {
     const occurrence = occurrences.find(item => item.templateId === block.id);
     if (!occurrence) return;
     const start = lpTimeMinutes(block.startTime);
-    const end = lpTimeMinutes(block.endTime);
     const task = data.weekPlanClasses.find(cls => cls.id === block.classId)?.tasks.find(item => item.id === occurrence.assignedTaskId);
+    const end = start + lpEffectiveBlockDuration(block, occurrence, task);
     const status = occurrence.done ? 'done' : occurrence.missed ? 'missed' : '';
     const statusMarkup = occurrence.done
       ? '<span class="dash-plan-status done">✓ Erledigt</span>'
@@ -147,7 +147,7 @@ function renderDashboardLearningPlan() {
         ? '<span class="dash-plan-status missed">↷ Nicht geschafft</span>'
         : `<div class="dash-plan-actions"><button title="Als erledigt markieren" aria-label="${escapeHtml(block.name)} als erledigt markieren" onclick="completeOccurrence('${todayStr}','${block.id}')">✓</button><button title="Als nicht geschafft markieren" aria-label="${escapeHtml(block.name)} als nicht geschafft markieren" onclick="missOccurrence('${todayStr}','${block.id}')">↷</button></div>`;
     const taskMarkup = task && end - start >= 48 ? `<div class="dash-plan-task">${escapeHtml(task.title)}</div>` : '';
-    html += `<div class="dash-plan-block ${status}" style="top:${start - 480}px;height:${end - start}px;background:${escapeHtml(block.color)}"><div class="dash-plan-header"><div class="dash-plan-title">${escapeHtml(block.name)}</div>${statusMarkup}</div><div class="dash-plan-time">${escapeHtml(block.startTime)}–${escapeHtml(block.endTime)}</div>${taskMarkup}</div>`;
+    html += `<div class="dash-plan-block ${status}" style="top:${start - 480}px;height:${end - start}px;background:${escapeHtml(block.color)}"><div class="dash-plan-header"><div class="dash-plan-title">${escapeHtml(block.name)}</div>${statusMarkup}</div><div class="dash-plan-time">${escapeHtml(block.startTime)}–${lpFormatTime(end)}</div>${taskMarkup}</div>`;
   });
   const nowMinutes = today.getHours() * 60 + today.getMinutes();
   if (nowMinutes >= 480 && nowMinutes <= 1200) html += `<div class="dash-now-line" style="top:${nowMinutes - 480}px"></div>`;
@@ -844,6 +844,9 @@ lernplanTab = 'week';
 let lpCreateMode = false;
 let lpBlockEditId = null;
 let lpBlockEditDate = null;
+let lpBlockEditShownDuration = null;
+let lpBlockEditBaseDuration = null;
+let lpBlockEditClassId = '';
 let lpClassEditId = null;
 let lpSuppressClickUntil = 0;
 let lpInteraction = null;
@@ -873,6 +876,9 @@ function migrateLearningPlanData() {
     cls.description = String(cls.description || '');
     cls.color = /^#[0-9a-f]{6}$/i.test(String(cls.color || '')) ? cls.color : '#f3d8cb';
     cls.loop = !!cls.loop;
+    const classDuration = Number(cls.durationMinutes);
+    cls.durationMinutes = Number.isInteger(classDuration) && classDuration >= 30 && classDuration <= 720 ? classDuration : 60;
+    cls.lectureIds = Array.isArray(cls.lectureIds) ? [...new Set(cls.lectureIds.map(String))] : [];
     if (!Array.isArray(cls.tasks)) cls.tasks = [];
     cls.tasks.forEach(task => {
       task.id = makeSafeId(task.id,'task');
@@ -882,7 +888,38 @@ function migrateLearningPlanData() {
       task.units = Number.isInteger(units) && units > 0 ? units : 1;
       const completed = Number(task.completedUnits);
       task.completedUnits = Number.isInteger(completed) ? Math.min(task.units,Math.max(0,completed)) : 0;
+      const taskDuration = Number(task.durationMinutes);
+      task.durationMinutes = Number.isInteger(taskDuration) && taskDuration >= 30 && taskDuration <= 720 ? taskDuration : null;
     });
+    const linkedLectures = cls.lectureIds.map(lectureId => data.lectures.find(item => String(item.id) === lectureId)).filter(Boolean);
+    const lectureGroups = new Map();
+    linkedLectures.forEach(lecture => {
+      const subject = lecture.subject || 'Ohne Fach';
+      if (!lectureGroups.has(subject)) lectureGroups.set(subject,[]);
+      lectureGroups.get(subject).push(lecture);
+    });
+    const previousLectureTasks = cls.tasks.filter(task => task.lectureId || Array.isArray(task.lectureIds));
+    const groupedLectureTasks = [...lectureGroups.entries()].map(([subject,lectures]) => {
+      const lectureIds = lectures.map(lecture => String(lecture.id));
+      const previousGroup = previousLectureTasks.find(task => Array.isArray(task.lectureIds) && task.lectureIds.some(id => lectureIds.includes(String(id))));
+      const previousSingles = previousLectureTasks.filter(task => task.lectureId && lectureIds.includes(String(task.lectureId)));
+      const completedLectureIds = previousGroup?.completedLectureIds
+        ? previousGroup.completedLectureIds.map(String).filter(id => lectureIds.includes(id))
+        : previousGroup
+          ? lectureIds.slice(0,Math.min(lectureIds.length,Number(previousGroup.completedUnits) || 0))
+          : previousSingles.filter(task => Number(task.completedUnits) > 0).map(task => String(task.lectureId));
+      return {
+        id:previousGroup?.id || previousSingles[0]?.id || `lecture-group-${makeSafeId(lectureIds[0],'lecture')}`,
+        lectureIds,
+        completedLectureIds,
+        title:subject,
+        description:lectures.map(lecture => lecture.title || lecture.subject || 'Vorlesung').join(', '),
+        units:lectureIds.length,
+        completedUnits:completedLectureIds.length,
+        durationMinutes:null
+      };
+    });
+    cls.tasks = [...groupedLectureTasks,...cls.tasks.filter(task => !task.lectureId && !Array.isArray(task.lectureIds))];
   });
 
   const toMinutes = value => {
@@ -905,7 +942,8 @@ function migrateLearningPlanData() {
       name: String(slot.name || slot.label || (slot.type === 'rechtsgebiet' ? 'Thema nacharbeiten' : TYPE_LABELS[slot.type] || 'Lernblock')),
       description: String(slot.description || ''),
       color: /^#[0-9a-f]{6}$/i.test(slot.color || '') ? slot.color : '#f3d8cb',
-      classId: linkedClass?.id || legacyClass?.id || ''
+      classId: linkedClass?.id || legacyClass?.id || '',
+      durationFollowsClass: !!slot.durationFollowsClass
     };
   });
   if (!data.weekPlanDays || typeof data.weekPlanDays !== 'object') data.weekPlanDays = {};
@@ -981,9 +1019,12 @@ function lpEnsureOccurrences(throughDate) {
   const visibleStart = new Date(currentWeekStart || getMonday(new Date()));
   for (let i = 0; i < 7; i++) lpOccurrencesForDate(fmtDate(addDays(visibleStart, i)));
 }
-function lpTaskProgressDisplay(task) {
+function lpTaskProgressDisplay(task,occurrence) {
   if (!task || !Number.isFinite(task.units) || task.units < 1) return '0/0';
-  const currentUnit = Math.min(task.units, Math.max(1, (Number(task.completedUnits) || 0) + 1));
+  const assignedUnit = Number(occurrence?.assignedUnitNumber);
+  const currentUnit = Number.isInteger(assignedUnit) && assignedUnit >= 1 && assignedUnit <= task.units
+    ? assignedUnit
+    : Math.min(task.units, Math.max(1, (Number(task.completedUnits) || 0) + 1));
   return `${currentUnit}/${task.units}`;
 }
 function lpClassLoopCompleted(cls) {
@@ -992,17 +1033,44 @@ function lpClassLoopCompleted(cls) {
 }
 function lpResetClassLoop(cls) {
   if (!lpClassLoopCompleted(cls)) return false;
-  cls.tasks.forEach(task => { task.completedUnits = 0; });
+  cls.tasks.forEach(task => {
+    task.completedUnits = 0;
+    if (Array.isArray(task.completedLectureIds)) task.completedLectureIds = [];
+  });
   return true;
 }
-function lpTaskForUnit(cls, unitIndex) {
+function lpTaskAssignmentForUnit(cls,unitIndex) {
   let remainingIndex = unitIndex;
   for (const task of cls.tasks) {
-    const remaining = Math.max(0, task.units - (Number(task.completedUnits) || 0));
-    if (remainingIndex < remaining) return task;
+    const completed = Number(task.completedUnits) || 0;
+    const remaining = Math.max(0,task.units - completed);
+    if (remainingIndex < remaining) return {task,unitNumber:completed + remainingIndex + 1};
     remainingIndex -= remaining;
   }
   return null;
+}
+function lpLectureForAssignment(task,unitNumber) {
+  if (!Array.isArray(task?.lectureIds)) return '';
+  const completed = new Set((task.completedLectureIds || []).map(String));
+  return task.lectureIds.filter(id => !completed.has(String(id)))[unitNumber - (Number(task.completedUnits) || 0) - 1] || '';
+}
+function lpEffectiveBlockDuration(block, occurrence, task) {
+  const duration = Number(occurrence?.durationMinutes);
+  if (Number.isInteger(duration) && duration >= 30 && duration <= 720) return duration;
+  const taskDuration = Number(task?.durationMinutes);
+  if (Number.isInteger(taskDuration) && taskDuration >= 30 && taskDuration <= 720) return taskDuration;
+  if (block?.durationFollowsClass) {
+    const classDuration = Number(data.weekPlanClasses.find(cls => cls.id === block.classId)?.durationMinutes);
+    if (Number.isInteger(classDuration) && classDuration >= 30 && classDuration <= 720) return classDuration;
+  }
+  return lpTimeMinutes(block.endTime) - lpTimeMinutes(block.startTime);
+}
+function lpTemplateDuration(block) {
+  if (block?.durationFollowsClass) {
+    const classDuration = Number(data.weekPlanClasses.find(cls => cls.id === block.classId)?.durationMinutes);
+    if (Number.isInteger(classDuration) && classDuration >= 30 && classDuration <= 720) return classDuration;
+  }
+  return lpTimeMinutes(block.endTime) - lpTimeMinutes(block.startTime);
 }
 function lpRefreshAssignments() {
   const todayStr = fmtDate(new Date());
@@ -1021,8 +1089,12 @@ function lpRefreshAssignments() {
     let unitIndex = 0;
     occurrences.filter(occurrence => occurrence.cls.id === cls.id).forEach(({item}) => {
       if (item.done) return;
-      const task = lpTaskForUnit(cls, unitIndex);
+      const assignment = lpTaskAssignmentForUnit(cls,unitIndex);
+      const task = assignment?.task;
+      if (item.assignedTaskId !== (task?.id || '')) delete item.durationMinutes;
       item.assignedTaskId = task?.id || '';
+      item.assignedUnitNumber = assignment?.unitNumber || 0;
+      item.assignedLectureId = lpLectureForAssignment(task,assignment?.unitNumber);
       if (!item.missed && task) unitIndex++;
     });
   });
@@ -1060,17 +1132,21 @@ function renderWeekCalendar() {
       const cls = data.weekPlanClasses.find(candidate => candidate.id === block.classId);
       const task = cls?.tasks.find(candidate => candidate.id === occurrence?.assignedTaskId);
       const start = lpTimeMinutes(block.startTime);
-      const end = lpTimeMinutes(block.endTime);
+      const end = start + lpEffectiveBlockDuration(block, occurrence, task);
       const top = (start - LP_GRID_START) * LP_MINUTES_PER_PIXEL;
       const height = (end - start) * LP_MINUTES_PER_PIXEL;
       const escapedName = escapeHtml(block.name);
       const classCompleted = cls && cls.tasks.length > 0 && cls.tasks.every(item => item.completedUnits >= item.units);
-      const taskMarkup = task ? `<div class="lp-block-task">${escapeHtml(task.title)} · ${lpTaskProgressDisplay(task)}</div>` : (classCompleted ? '<div class="lp-block-task">Klasse abgeschlossen</div>' : '');
+      const assignedLecture = task?.lectureIds?.length
+        ? data.lectures.find(lecture => String(lecture.id) === String(occurrence?.assignedLectureId))
+        : null;
+      const taskTitle = assignedLecture?.title || task?.title;
+      const taskMarkup = task ? `<div class="lp-block-task">${escapeHtml(taskTitle)} · ${lpTaskProgressDisplay(task,occurrence)}</div>` : (classCompleted ? '<div class="lp-block-task">Klasse abgeschlossen</div>' : '');
       const action = cls && task && occurrence && !occurrence.done
         ? `<div class="lp-block-actions"><button onclick="event.stopPropagation();completeOccurrence('${dateStr}','${block.id}')">✓ Erledigt</button><button onclick="event.stopPropagation();missOccurrence('${dateStr}','${block.id}')">↷ Verschieben</button></div>`
         : '';
       html += `<div class="lp-block ${occurrence?.done ? 'done' : ''}" data-template-id="${block.id}" data-date="${dateStr}" style="top:${top}px;height:${height}px;background:${escapeHtml(block.color)}" onpointerdown="beginBlockPointer(event,'${block.id}')" onclick="handleBlockClick('${block.id}','${dateStr}')">
-        <div class="lp-block-title">${escapedName}</div><div class="lp-block-time">${block.startTime}–${block.endTime}</div>
+        <div class="lp-block-title">${escapedName}</div><div class="lp-block-time">${block.startTime}–${lpFormatTime(end)}</div>
         ${block.description ? `<div class="lp-block-description">${escapeHtml(block.description)}</div>` : ''}${taskMarkup}${action}
         <span class="lp-resize-handle top" onpointerdown="beginBlockResize(event,'${block.id}','start')"></span><span class="lp-resize-handle" onpointerdown="beginBlockResize(event,'${block.id}','end')"></span></div>`;
     });
@@ -1144,7 +1220,7 @@ function beginBlockPointer(event, blockId) {
   const block = data.weekPlanSlots.find(item => item.id === blockId);
   if (!block) return;
   const dayColumn = event.currentTarget.parentElement;
-  lpInteraction = {mode:'move',blockId,day:block.day,start:lpTimeMinutes(block.startTime),end:lpTimeMinutes(block.endTime),originalStart:lpTimeMinutes(block.startTime),duration:lpTimeMinutes(block.endTime)-lpTimeMinutes(block.startTime),originY:event.clientY,originX:event.clientX,dayIndex:Number(dayColumn.dataset.dayIndex),column:dayColumn,blockColor:block.color,moved:false};
+  lpInteraction = {mode:'move',blockId,day:block.day,start:lpTimeMinutes(block.startTime),end:lpTimeMinutes(block.startTime) + lpTemplateDuration(block),originalStart:lpTimeMinutes(block.startTime),duration:lpTemplateDuration(block),originY:event.clientY,originX:event.clientX,dayIndex:Number(dayColumn.dataset.dayIndex),column:dayColumn,blockColor:block.color,moved:false};
   lpShowSelection(lpInteraction);
   window.addEventListener('pointermove', handleCalendarPointerMove);
   window.addEventListener('pointerup', finishCalendarPointer, {once:true});
@@ -1154,8 +1230,15 @@ function beginBlockResize(event, blockId, edge) {
   event.preventDefault();
   const block = data.weekPlanSlots.find(item => item.id === blockId);
   if (!block) return;
+  const blockElement = event.currentTarget.closest('.lp-block');
   const dayColumn = event.currentTarget.closest('.lp-day-column');
-  lpInteraction = {mode:edge === 'start' ? 'resize-start' : 'resize-end',blockId,day:block.day,start:lpTimeMinutes(block.startTime),end:lpTimeMinutes(block.endTime),originalStart:lpTimeMinutes(block.startTime),originalEnd:lpTimeMinutes(block.endTime),originY:event.clientY,column:dayColumn,blockColor:block.color,moved:false};
+  const dateStr = blockElement?.dataset.date;
+  const occurrence = data.weekPlanDays[dateStr]?.find(item => item.templateId === blockId);
+  const cls = data.weekPlanClasses.find(item => item.id === block.classId);
+  const task = cls?.tasks.find(item => item.id === occurrence?.assignedTaskId);
+  const start = lpTimeMinutes(block.startTime);
+  const visualDuration = lpEffectiveBlockDuration(block,occurrence,task);
+  lpInteraction = {mode:edge === 'start' ? 'resize-start' : 'resize-end',blockId,day:block.day,dateStr,start,end:start + visualDuration,originalStart:start,originalEnd:start + visualDuration,baseDuration:lpTemplateDuration(block),occurrenceSpecific:!!task?.durationMinutes || Number.isInteger(Number(occurrence?.durationMinutes)),taskDuration:task?.durationMinutes,originY:event.clientY,column:dayColumn,blockColor:block.color,moved:false};
   lpShowSelection(lpInteraction);
   window.addEventListener('pointermove', handleCalendarPointerMove);
   window.addEventListener('pointerup', finishCalendarPointer, {once:true});
@@ -1233,18 +1316,50 @@ function finishCalendarPointer(event) {
   const block = data.weekPlanSlots.find(item => item.id === interaction.blockId);
   if (!block) return;
   const start = lpTimeMinutes(block.startTime);
-  const end = lpTimeMinutes(block.endTime);
   const nextStart = interaction.mode === 'resize-start' ? interaction.start : interaction.mode === 'resize-end' ? start : interaction.start;
   const nextEnd = interaction.mode === 'resize-start' ? interaction.originalEnd : interaction.end;
+  if ((interaction.mode === 'resize-start' || interaction.mode === 'resize-end') && interaction.occurrenceSpecific) {
+    const occurrence = data.weekPlanDays[interaction.dateStr]?.find(item => item.templateId === block.id);
+    if (occurrence) {
+      const duration = nextEnd - nextStart;
+      if (duration < 30 || lpHasOccurrenceOverlap(interaction.dateStr,block.id,nextStart,nextEnd)) {
+        toast('Dieser Zeitraum ist bereits belegt.');
+        renderWeekCalendar();
+        return;
+      }
+      if (duration === interaction.taskDuration) delete occurrence.durationMinutes;
+      else occurrence.durationMinutes = duration;
+      if (interaction.mode === 'resize-start') {
+        block.startTime = lpFormatTime(nextStart);
+        block.endTime = lpFormatTime(nextStart + interaction.baseDuration);
+      }
+      saveToLocal(); renderWeekCalendar();
+      return;
+    }
+  }
   if (lpHasOverlap(interaction.day,nextStart,nextEnd,block.id)) { toast('Dieser Zeitraum ist bereits belegt.'); renderWeekCalendar(); return; }
   block.day = interaction.day;
   block.startTime = lpFormatTime(nextStart);
   block.endTime = lpFormatTime(nextEnd);
+  const cls = data.weekPlanClasses.find(item => item.id === block.classId);
+  block.durationFollowsClass = !!cls && nextEnd - nextStart === Number(cls.durationMinutes);
   saveToLocal(); renderWeekCalendar();
+}
+function lpHasOccurrenceOverlap(dateStr,excludeId,start,end) {
+  const dayName = WEEKDAY_NAMES[new Date(`${dateStr}T00:00:00`).getDay()];
+  return data.weekPlanSlots.some(block => {
+    if (block.id === excludeId || block.day !== dayName) return false;
+    const occurrence = data.weekPlanDays[dateStr]?.find(item => item.templateId === block.id);
+    const cls = data.weekPlanClasses.find(item => item.id === block.classId);
+    const task = cls?.tasks.find(item => item.id === occurrence?.assignedTaskId);
+    const blockStart = lpTimeMinutes(block.startTime);
+    const blockEnd = blockStart + lpEffectiveBlockDuration(block,occurrence,task);
+    return start < blockEnd && end > blockStart;
+  });
 }
 function lpHasOverlap(day,start,end,excludeId='') {
   return data.weekPlanSlots.some(block => block.id !== excludeId && block.day === day &&
-    start < lpTimeMinutes(block.endTime) && end > lpTimeMinutes(block.startTime));
+    start < lpTimeMinutes(block.startTime) + lpTemplateDuration(block) && end > lpTimeMinutes(block.startTime));
 }
 window.addEventListener('pointermove',handleCalendarPointerMove);
 window.addEventListener('pointerup',finishCalendarPointer);
@@ -1259,22 +1374,30 @@ function lpSyncBlockFromClass(block, classId) {
   block.color = cls.color || '#f3d8cb';
   return cls;
 }
+function lpSetBlockDurationInput(start,duration) {
+  document.getElementById('block-end').value = lpFormatTime(start + duration);
+}
 function openBlockModal(blockId,dateStr) {
   if (Date.now() < lpSuppressClickUntil) return;
   lpBlockEditId = blockId; lpBlockEditDate = dateStr;
   const block = data.weekPlanSlots.find(item => item.id === blockId);
   if (!block) return;
+  const occurrence = data.weekPlanDays[dateStr]?.find(item => item.templateId === blockId);
+  const cls = data.weekPlanClasses.find(candidate => candidate.id === block.classId);
+  const task = cls?.tasks.find(candidate => candidate.id === occurrence?.assignedTaskId);
+  lpBlockEditShownDuration = lpEffectiveBlockDuration(block,occurrence,task);
+  lpBlockEditBaseDuration = lpTemplateDuration(block);
+  lpBlockEditClassId = block.classId || '';
   document.getElementById('block-modal-title').textContent = 'Lernblock bearbeiten';
   document.getElementById('block-start').value = block.startTime;
-  document.getElementById('block-end').value = block.endTime;
+  lpSetBlockDurationInput(lpTimeMinutes(block.startTime),lpBlockEditShownDuration);
   const select = document.getElementById('block-class');
   select.innerHTML = '<option value="">Keine Klasse</option>' + data.weekPlanClasses.map(cls => `<option value="${escapeHtml(cls.id)}">${escapeHtml(cls.name)}</option>`).join('');
   select.value = block.classId || '';
-  const classMatch = data.weekPlanClasses.find(candidate => candidate.id === block.classId);
-  if (classMatch) {
-    document.getElementById('block-name').value = classMatch.name;
-    document.getElementById('block-description').value = classMatch.description || '';
-    document.getElementById('block-color').value = classMatch.color || '#f3d8cb';
+  if (cls) {
+    document.getElementById('block-name').value = cls.name;
+    document.getElementById('block-description').value = cls.description || '';
+    document.getElementById('block-color').value = cls.color || '#f3d8cb';
   } else {
     document.getElementById('block-name').value = block.name;
     document.getElementById('block-description').value = block.description || '';
@@ -1286,19 +1409,24 @@ function openBlockModal(blockId,dateStr) {
       document.getElementById('block-name').value = selectedClass.name;
       document.getElementById('block-description').value = selectedClass.description || '';
       document.getElementById('block-color').value = selectedClass.color || '#f3d8cb';
+      lpSetBlockDurationInput(lpTimeMinutes(document.getElementById('block-start').value),selectedClass.durationMinutes || 60);
     }
   };
-  const occurrence = data.weekPlanDays[dateStr]?.find(item => item.templateId === blockId);
-  const cls = data.weekPlanClasses.find(candidate => candidate.id === block.classId);
-  const task = cls?.tasks.find(candidate => candidate.id === occurrence?.assignedTaskId);
   const actions = document.getElementById('block-occurrence-actions');
   actions.style.display = cls && task && occurrence && !occurrence.done ? 'block' : 'none';
-  document.getElementById('block-assignment').textContent = task ? `Lerneinheit: ${task.title} (${lpTaskProgressDisplay(task)})` : '';
+  const assignedLecture = task?.lectureIds?.length
+    ? data.lectures.find(lecture => String(lecture.id) === String(occurrence?.assignedLectureId))
+    : null;
+  document.getElementById('block-assignment').textContent = task ? `Lerneinheit: ${assignedLecture?.title || task.title} (${lpTaskProgressDisplay(task,occurrence)})` : '';
   document.getElementById('block-delete-btn').style.display = 'inline-flex';
   openModal('block-modal');
 }
 function handleBlockClick(blockId,dateStr) { if (!lpCreateMode) openBlockModal(blockId,dateStr); }
-function closeBlockModal() { closeModal('block-modal'); lpBlockEditId = null; lpBlockEditDate = null; }
+function closeBlockModal() {
+  closeModal('block-modal');
+  lpBlockEditId = null; lpBlockEditDate = null;
+  lpBlockEditShownDuration = null; lpBlockEditBaseDuration = null; lpBlockEditClassId = '';
+}
 function saveBlock() {
   const block = data.weekPlanSlots.find(item => item.id === lpBlockEditId);
   if (!block) return;
@@ -1309,13 +1437,28 @@ function saveBlock() {
   const end = lpTimeMinutes(document.getElementById('block-end').value);
   if (!name) { toast('Bitte einen Namen für den Block eingeben.'); return; }
   if (!Number.isFinite(start) || !Number.isFinite(end) || start < LP_GRID_START || end > LP_GRID_END || end - start < 30) { toast('Bitte einen gültigen Zeitraum zwischen 06:00 und 24:00 wählen (mindestens 30 Minuten).'); return; }
-  if (lpHasOverlap(block.day,start,end,block.id)) { toast('Dieser Zeitraum ist bereits belegt.'); return; }
+  const occurrence = data.weekPlanDays[lpBlockEditDate]?.find(item => item.templateId === block.id);
+  const sameClass = selectedClassId === lpBlockEditClassId;
+  const shownDuration = lpBlockEditShownDuration ?? (end - start);
+  let baseDuration = end - start;
+  if (sameClass && (end - start) === shownDuration) baseDuration = lpBlockEditBaseDuration ?? baseDuration;
+  const baseEnd = start + baseDuration;
+  if (baseEnd > LP_GRID_END || lpHasOverlap(block.day,start,baseEnd,block.id)) { toast('Dieser Zeitraum ist bereits belegt oder endet nach 20:00.'); return; }
+  const occurrenceTask = selectedClass?.tasks.find(candidate => candidate.id === occurrence?.assignedTaskId);
+  if (occurrence && selectedClass && sameClass && occurrenceTask && (end - start) !== shownDuration) {
+    if (lpHasOccurrenceOverlap(lpBlockEditDate,block.id,start,end)) { toast('Dieser Zeitraum ist bereits belegt.'); return; }
+    if ((end - start) === occurrenceTask.durationMinutes) delete occurrence.durationMinutes;
+    else occurrence.durationMinutes = end - start;
+  } else if (occurrence && selectedClassId !== lpBlockEditClassId) {
+    delete occurrence.durationMinutes;
+  }
   block.name = name;
   block.description = selectedClass ? (selectedClass.description || '') : document.getElementById('block-description').value.trim();
   block.startTime = lpFormatTime(start);
-  block.endTime = lpFormatTime(end);
+  block.endTime = lpFormatTime(baseEnd);
   block.color = selectedClass ? (selectedClass.color || '#f3d8cb') : document.getElementById('block-color').value;
   block.classId = selectedClassId;
+  block.durationFollowsClass = !!selectedClass && baseDuration === Number(selectedClass.durationMinutes || 60);
   saveToLocal(); closeBlockModal(); renderWeekCalendar(); renderClassList(); toast('Block gespeichert');
 }
 function deleteCurrentBlock() {
@@ -1335,7 +1478,11 @@ function completeOccurrence(dateStr,blockId) {
   if (!block || !occurrence || occurrence.done || occurrence.missed) return;
   if (cls && task) {
     if (task.completedUnits >= task.units) { lpRefreshAssignments(); toast('Diese Teilaufgabe ist bereits abgeschlossen.'); return; }
-    task.completedUnits++;
+    if (Array.isArray(task.lectureIds)) {
+      if (!Array.isArray(task.completedLectureIds)) task.completedLectureIds = [];
+      if (occurrence.assignedLectureId && !task.completedLectureIds.includes(occurrence.assignedLectureId)) task.completedLectureIds.push(occurrence.assignedLectureId);
+      task.completedUnits = task.completedLectureIds.length;
+    } else task.completedUnits++;
     if (cls.loop) lpResetClassLoop(cls);
   }
   occurrence.done = true;
@@ -1354,6 +1501,70 @@ function missOccurrence(dateStr,blockId) {
   toast(block?.classId ? 'Nicht geschafft – die Klasse rückt einen Termin weiter.' : 'Lernblock als nicht geschafft markiert.');
 }
 
+function renderClassLectureSelector(cls) {
+  const container = document.getElementById('class-lecture-selector');
+  const lectures = Array.isArray(data.lectures) ? data.lectures : [];
+  if (!lectures.length) {
+    container.innerHTML = '<div class="text-muted" style="font-size:13px">Lege zuerst im Bereich Vorlesungen Einträge an.</div>';
+    return;
+  }
+  const selected = new Set(cls?.lectureIds || []);
+  const bySubject = new Map();
+  lectures.forEach(lecture => {
+    const subject = lecture.subject || 'Ohne Fach';
+    if (!bySubject.has(subject)) bySubject.set(subject,[]);
+    bySubject.get(subject).push(lecture);
+  });
+  const groups = [...bySubject.entries()].sort(([a],[b]) => a.localeCompare(b,'de'));
+  const allSelected = lectures.every(lecture => selected.has(String(lecture.id)));
+  container.innerHTML = `<label class="checkbox-label lp-lecture-all"><input class="class-lecture-all" type="checkbox" ${allSelected ? 'checked' : ''} onchange="updateClassLectureSelection(this)"> Alle Vorlesungen auswählen</label>` +
+    groups.map(([subject,items]) => {
+      const subjectSelected = items.every(lecture => selected.has(String(lecture.id)));
+      const rows = [...items].sort((a,b) => (a.date || '').localeCompare(b.date || '') || (a.title || '').localeCompare(b.title || '', 'de'));
+      return `<div class="lp-lecture-group"><label class="checkbox-label lp-lecture-subject"><input class="class-lecture-subject" type="checkbox" data-subject="${escapeHtml(subject)}" ${subjectSelected ? 'checked' : ''} onchange="updateClassLectureSelection(this)"> Alle Vorlesungen: ${escapeHtml(subject)}</label><div class="lp-lecture-options">${rows.map(lecture => `<label class="lp-lecture-option"><input class="class-lecture-choice" type="checkbox" value="${escapeHtml(String(lecture.id))}" data-subject="${escapeHtml(subject)}" ${selected.has(String(lecture.id)) ? 'checked' : ''} onchange="updateClassLectureSelection(this)"><span>${escapeHtml(lecture.title || subject)}${lecture.date ? `<small>${escapeHtml(lecture.date)}</small>` : ''}${lecture.cancelled ? '<small>Ausgefallen</small>' : ''}</span></label>`).join('')}</div></div>`;
+    }).join('');
+}
+function renderClassLectureTaskPreview() {
+    const container = document.getElementById('class-linked-lecture-tasks');
+    const currentClass = data.weekPlanClasses.find(item => item.id === lpClassEditId);
+    const selected = [...document.querySelectorAll('#class-lecture-selector .class-lecture-choice:checked')];
+    const groups = new Map();
+    selected.forEach(input => {
+      const lecture = data.lectures.find(item => String(item.id) === input.value);
+      if (!lecture) return;
+      const subject = lecture.subject || 'Ohne Fach';
+      if (!groups.has(subject)) groups.set(subject,[]);
+      groups.get(subject).push(lecture);
+    });
+    container.innerHTML = groups.size
+      ? `<div class="item-meta">Vorlesungen desselben Fachs bilden eine gemeinsame Teilaufgabe:</div>${[...groups.entries()].map(([subject,lectures]) => {
+        const ids = lectures.map(lecture => String(lecture.id));
+        const groupTask = currentClass?.tasks.find(task => Array.isArray(task.lectureIds) && task.lectureIds.some(id => ids.includes(String(id))));
+        const completed = groupTask?.completedLectureIds
+          ? groupTask.completedLectureIds.filter(id => ids.includes(String(id))).length
+          : Math.min(lectures.length,Number(groupTask?.completedUnits) || 0);
+        return `<div class="item-meta lp-linked-lecture-task"><strong>${escapeHtml(subject)} · ${completed}/${lectures.length} Einheiten erledigt</strong><small>${lectures.map(lecture => escapeHtml(lecture.title || lecture.subject || 'Vorlesung')).join(', ')}</small></div>`;
+      }).join('')}`
+      : '<div class="item-meta">Keine Vorlesungen ausgewählt.</div>';
+}
+function updateClassLectureSelection(input) {
+  const container = document.getElementById('class-lecture-selector');
+  if (input.classList.contains('class-lecture-all')) {
+    container.querySelectorAll('.class-lecture-choice,.class-lecture-subject').forEach(item => { item.checked = input.checked; });
+  } else if (input.classList.contains('class-lecture-subject')) {
+    container.querySelectorAll('.class-lecture-choice').forEach(item => {
+      if (item.dataset.subject === input.dataset.subject) item.checked = input.checked;
+    });
+  }
+  container.querySelectorAll('.class-lecture-subject').forEach(subjectInput => {
+    const choices = [...container.querySelectorAll('.class-lecture-choice')].filter(item => item.dataset.subject === subjectInput.dataset.subject);
+    subjectInput.checked = choices.length > 0 && choices.every(item => item.checked);
+  });
+  const choices = [...container.querySelectorAll('.class-lecture-choice')];
+  const allInput = container.querySelector('.class-lecture-all');
+  allInput.checked = choices.length > 0 && choices.every(item => item.checked);
+  renderClassLectureTaskPreview();
+}
 function openClassModal(classId='') {
   lpClassEditId = classId || null;
   const cls = data.weekPlanClasses.find(item => item.id === classId);
@@ -1361,11 +1572,14 @@ function openClassModal(classId='') {
   document.getElementById('class-name').value = cls?.name || '';
   document.getElementById('class-description').value = cls?.description || '';
   document.getElementById('class-color').value = cls?.color || '#f3d8cb';
+  document.getElementById('class-duration').value = cls?.durationMinutes || 60;
   document.getElementById('class-loop').checked = !!cls?.loop;
   document.getElementById('class-delete-btn').style.display = cls ? 'inline-flex' : 'none';
+  renderClassLectureSelector(cls);
+  renderClassLectureTaskPreview();
   const editor = document.getElementById('class-task-editor');
   editor.innerHTML = '';
-  (cls?.tasks || []).forEach(task => addClassTaskRow(task));
+  (cls?.tasks || []).filter(task => !task.lectureId && !Array.isArray(task.lectureIds)).forEach(task => addClassTaskRow(task));
   if (!cls) addClassTaskRow();
   openModal('class-modal');
 }
@@ -1375,7 +1589,7 @@ function addClassTaskRow(task={}) {
   row.className = 'lp-task-row';
   row.dataset.taskId = task.id || `task-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   row.dataset.completed = String(task.completedUnits || 0);
-  row.innerHTML = `<div style="flex:1;min-width:0"><input class="task-title" maxlength="100" placeholder="Teilaufgabe / Thema" value="${escapeHtml(task.title || '')}"><input class="task-description" maxlength="300" placeholder="Beschreibung (optional)" value="${escapeHtml(task.description || '')}" style="margin-top:6px"></div><div style="width:95px"><label style="margin-top:0">Einheiten</label><input class="task-units" type="number" min="1" value="${Math.max(1,Number(task.units || 1))}"><small style="color:var(--ink-tertiary)">${Number(task.completedUnits || 0)} erledigt</small></div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn small" type="button" onclick="moveClassTaskRow(this,-1)" aria-label="Teilaufgabe nach oben">↑</button><button class="btn small" type="button" onclick="moveClassTaskRow(this,1)" aria-label="Teilaufgabe nach unten">↓</button><button class="btn small danger" type="button" onclick="this.parentElement.parentElement.remove()" aria-label="Teilaufgabe entfernen">×</button></div>`;
+  row.innerHTML = `<div style="flex:1;min-width:0"><input class="task-title" maxlength="100" placeholder="Teilaufgabe / Thema" value="${escapeHtml(task.title || '')}"><input class="task-description" maxlength="300" placeholder="Beschreibung (optional)" value="${escapeHtml(task.description || '')}" style="margin-top:6px"></div><div class="lp-task-settings"><label style="margin-top:0">Einheiten</label><input class="task-units" type="number" min="1" value="${Math.max(1,Number(task.units || 1))}"><small style="color:var(--ink-tertiary)">${Number(task.completedUnits || 0)} erledigt</small><label>Minuten je Block</label><input class="task-duration" type="number" min="30" max="720" step="30" placeholder="Klassenstandard" value="${task.durationMinutes || ''}"></div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn small" type="button" onclick="moveClassTaskRow(this,-1)" aria-label="Teilaufgabe nach oben">↑</button><button class="btn small" type="button" onclick="moveClassTaskRow(this,1)" aria-label="Teilaufgabe nach unten">↓</button><button class="btn small danger" type="button" onclick="this.parentElement.parentElement.remove()" aria-label="Teilaufgabe entfernen">×</button></div>`;
   document.getElementById('class-task-editor').appendChild(row);
 }
 function moveClassTaskRow(button,direction) {
@@ -1390,18 +1604,63 @@ function saveClass() {
   const name = document.getElementById('class-name').value.trim();
   if (!name) { toast('Bitte einen Namen für die Klasse eingeben.'); return; }
   if (data.weekPlanClasses.some(cls => cls.name.toLowerCase() === name.toLowerCase() && cls.id !== lpClassEditId)) { toast('Eine Klasse mit diesem Namen gibt es bereits.'); return; }
+  const durationMinutes = Number(document.getElementById('class-duration').value);
+  if (!Number.isInteger(durationMinutes) || durationMinutes < 30 || durationMinutes > 720) { toast('Die Klassendauer muss zwischen 30 und 720 Minuten liegen.'); return; }
   const rows = [...document.querySelectorAll('#class-task-editor .lp-task-row')];
-  const tasks = [];
+  const manualTasks = [];
   for (const row of rows) {
     const title = row.querySelector('.task-title').value.trim();
     if (!title) continue;
     const units = Number(row.querySelector('.task-units').value);
     const completedUnits = Number(row.dataset.completed || 0);
     if (!Number.isInteger(units) || units < 1 || units < completedUnits) { toast(`Die Einheiten für „${title}“ müssen mindestens ${completedUnits} betragen.`); return; }
-    tasks.push({id:row.dataset.taskId,title,description:row.querySelector('.task-description').value.trim(),units,completedUnits});
+    const taskDurationRaw = row.querySelector('.task-duration').value.trim();
+    const taskDuration = taskDurationRaw ? Number(taskDurationRaw) : null;
+    if (taskDuration !== null && (!Number.isInteger(taskDuration) || taskDuration < 30 || taskDuration > 720)) { toast(`Die Dauer für „${title}“ muss zwischen 30 und 720 Minuten liegen.`); return; }
+    manualTasks.push({id:row.dataset.taskId,title,description:row.querySelector('.task-description').value.trim(),units,completedUnits,durationMinutes:taskDuration});
   }
   const existing = data.weekPlanClasses.find(cls => cls.id === lpClassEditId);
-  const cls = {id:existing?.id || `class-${Date.now()}-${Math.random().toString(36).slice(2)}`,name,description:document.getElementById('class-description').value.trim(),color:document.getElementById('class-color').value,tasks,loop:document.getElementById('class-loop').checked};
+  const lectureIds = [...document.querySelectorAll('#class-lecture-selector .class-lecture-choice:checked')].map(input => input.value);
+  const selectedLectures = lectureIds.map(lectureId => data.lectures.find(item => String(item.id) === lectureId)).filter(Boolean);
+  const lectureGroups = new Map();
+  selectedLectures.forEach(lecture => {
+    const subject = lecture.subject || 'Ohne Fach';
+    if (!lectureGroups.has(subject)) lectureGroups.set(subject,[]);
+    lectureGroups.get(subject).push(lecture);
+  });
+  const previousLectureTasks = existing?.tasks.filter(task => task.lectureId || Array.isArray(task.lectureIds)) || [];
+  const lectureTasks = [...lectureGroups.entries()].map(([subject,lectures]) => {
+    const ids = lectures.map(lecture => String(lecture.id));
+    const previousGroup = previousLectureTasks.find(task => Array.isArray(task.lectureIds) && task.lectureIds.some(id => ids.includes(String(id))));
+    const previousSingles = previousLectureTasks.filter(task => task.lectureId && ids.includes(String(task.lectureId)));
+    const completedLectureIds = previousGroup?.completedLectureIds
+      ? previousGroup.completedLectureIds.map(String).filter(id => ids.includes(id))
+      : previousGroup
+        ? ids.slice(0,Math.min(ids.length,Number(previousGroup.completedUnits) || 0))
+        : previousSingles.filter(task => Number(task.completedUnits) > 0).map(task => String(task.lectureId));
+    return {
+      id:previousGroup?.id || previousSingles[0]?.id || `lecture-group-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      lectureIds:ids,
+      completedLectureIds,
+      title:subject,
+      description:lectures.map(lecture => lecture.title || lecture.subject || 'Vorlesung').join(', '),
+      units:ids.length,
+      completedUnits:completedLectureIds.length,
+      durationMinutes:null
+    };
+  });
+  const oldDuration = existing?.durationMinutes;
+  const cls = {id:existing?.id || `class-${Date.now()}-${Math.random().toString(36).slice(2)}`,name,description:document.getElementById('class-description').value.trim(),color:document.getElementById('class-color').value,durationMinutes,lectureIds,tasks:[...lectureTasks,...manualTasks],loop:document.getElementById('class-loop').checked};
+  if (existing && oldDuration !== durationMinutes) {
+    for (const block of data.weekPlanSlots.filter(item => item.classId === existing.id && item.durationFollowsClass)) {
+      const start = lpTimeMinutes(block.startTime);
+      const end = start + durationMinutes;
+      if (end > LP_GRID_END || lpHasOverlap(block.day,start,end,block.id)) {
+        toast(`Die neue Klassendauer überschneidet sich im Block „${block.name}“ mit einem anderen Lernblock.`);
+        return;
+      }
+    }
+  }
   if (existing) Object.assign(existing,cls); else data.weekPlanClasses.push(cls);
   data.weekPlanSlots.forEach(block => {
     if (block.classId === cls.id) {
@@ -1427,9 +1686,13 @@ function renderClassList() {
   container.innerHTML = data.weekPlanClasses.map(cls => {
     const completed = cls.tasks.reduce((sum,task) => sum + task.completedUnits,0);
     const total = cls.tasks.reduce((sum,task) => sum + task.units,0);
-    const tasks = cls.tasks.length ? cls.tasks.map(task => `<div class="item-meta" style="margin-top:8px">${escapeHtml(task.title)} · ${task.completedUnits}/${task.units} Einheiten${task.description ? ` — ${escapeHtml(task.description)}` : ''}</div>`).join('') : '<div class="item-meta" style="margin-top:8px">Noch keine Teilaufgaben</div>';
+    const tasks = cls.tasks.length ? cls.tasks.map(task => `<div class="item-meta" style="margin-top:8px">${task.lectureIds?.length ? '📚 ' : ''}${escapeHtml(task.title)} · ${task.completedUnits}/${task.units} ${task.lectureIds?.length ? 'Vorlesungen' : 'Einheiten'}${task.durationMinutes ? ` · ${task.durationMinutes} Min.` : ''}${task.description ? ` — ${escapeHtml(task.description)}` : ''}</div>`).join('') : '<div class="item-meta" style="margin-top:8px">Noch keine Teilaufgaben</div>';
+    const linkedLectures = (cls.lectureIds || []).map(id => data.lectures.find(lecture => String(lecture.id) === String(id))).filter(Boolean);
+    const lectureSummary = linkedLectures.length
+      ? `<div class="item-meta lp-class-lectures">Vorlesungen (${linkedLectures.length}): ${linkedLectures.map(lecture => escapeHtml(lecture.title || lecture.subject || 'Vorlesung')).join(', ')}</div>`
+      : '<div class="item-meta lp-class-lectures">Keine Vorlesungen verknüpft</div>';
     const loopTag = cls.loop ? '<span class="tag accent" style="margin-top:8px;display:inline-flex;">Loop</span>' : '';
-    return `<div class="lp-class-card" style="border-left-color:${escapeHtml(cls.color)}"><div class="lp-class-head"><div><strong>${escapeHtml(cls.name)}</strong><div class="item-meta">${completed} von ${total} Lerneinheiten erledigt${cls.description ? ` · ${escapeHtml(cls.description)}` : ''}</div>${loopTag}${tasks}</div><button class="btn small" onclick="openClassModal('${cls.id}')">Bearbeiten</button></div></div>`;
+    return `<div class="lp-class-card" style="border-left-color:${escapeHtml(cls.color)}"><div class="lp-class-head"><div><strong>${escapeHtml(cls.name)}</strong><div class="item-meta">${completed} von ${total} Lerneinheiten erledigt · ${Number(cls.durationMinutes || 60)} Min. je Block${cls.description ? ` · ${escapeHtml(cls.description)}` : ''}</div>${lectureSummary}${loopTag}${tasks}</div><button class="btn small" onclick="openClassModal('${cls.id}')">Bearbeiten</button></div></div>`;
   }).join('');
 }
 

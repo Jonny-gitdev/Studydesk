@@ -36,7 +36,7 @@ This is the core time-saver of the app. Set up your schedule once at the start o
 
 The **Lernplan** tab provides a weekly calendar for recurring study blocks. Add a block by dragging across a free time range, move it between days by dragging, or resize it from either edge. Each block has its own name, description, color, and optional class.
 
-Classes contain ordered subtasks with a required number of study units. Class blocks are filled with the next open subtask automatically. Marking a unit complete records progress and advances the class; marking it as not completed leaves that unit for the next appointment and shifts later class work back by one appointment. Class progress and the recurring plan are stored locally and included in data exports.
+Classes contain ordered subtasks with a required number of study units. Link all lectures, every lecture in a subject, or individual lectures to a class; linked lectures from the same subject form one subtask with one unit per lecture, and are worked through before manually added subtasks. Each scheduled unit shows its own sequential progress (for example, 2/4). Each class has a default block duration, and individual subtasks can override it; assigned blocks use the relevant duration while still allowing a block's duration to be adjusted. Class blocks are filled with the next open subtask automatically. Marking a unit complete records progress and advances the class; marking it as not completed leaves that unit for the next appointment and shifts later class work back by one appointment. Class progress and the recurring plan are stored locally and included in data exports.
 
 ### To-Do List
 

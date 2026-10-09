@@ -173,10 +173,24 @@
   .lp-class-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
   .lp-task-row{display:flex;gap:8px;align-items:center;margin:8px 0}
   .lp-task-row input:first-child{flex:1}
+  .lp-task-settings{width:118px;flex-shrink:0}
+  .lp-lecture-selector{max-height:230px;overflow:auto;border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px}
+  .lp-lecture-all{padding:4px 0 8px;border-bottom:1px solid var(--border);font-weight:600}
+  .lp-lecture-group{padding:6px 0;border-bottom:1px solid var(--border-light)}
+  .lp-lecture-subject{font-weight:600}
+  .lp-lecture-options{padding-left:22px}
+  .lp-lecture-option{display:flex;align-items:flex-start;gap:8px;padding:4px 0;font-size:13px}
+  .lp-lecture-option input{margin-top:3px;flex-shrink:0}
+  .lp-lecture-option span{min-width:0;overflow-wrap:anywhere}
+  .lp-lecture-option small{display:block;color:var(--ink-tertiary)}
+  .lp-class-lectures{margin-top:8px}
+  .lp-linked-lecture-tasks{margin:10px 0 16px}
+  .lp-linked-lecture-task{padding:5px 0 5px 12px;border-left:2px solid var(--accent);margin-top:4px}
   .lp-color-input{height:42px!important;padding:4px!important;width:64px!important}
   .lp-create-hint{color:var(--accent);font-size:12px;font-weight:600}
   .lp-empty{padding:36px 18px;text-align:center;color:var(--ink-tertiary)}
   @media(max-width:920px){.lp-calendar-scroll{max-height:calc(100vh - 300px)}.lp-class-head{flex-direction:column}}
+  @media(max-width:600px){.lp-task-row{align-items:stretch;flex-wrap:wrap}.lp-task-settings{width:calc(50% - 4px)}.lp-task-row>div:last-child{flex-direction:row!important;align-items:center}}
   .queue-item{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;cursor:grab;transition:var(--transition)}
   .queue-item:hover{box-shadow:var(--shadow);border-color:var(--accent)}
   .queue-item.active-item{border-color:var(--accent);background:var(--accent-soft)}

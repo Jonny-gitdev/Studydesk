@@ -46,7 +46,7 @@
         </div>
         <div class="guide-grid">
           <div class="guide-step"><strong>1. Wochenplan gestalten</strong><small>Ziehe Blöcke in freie Zeiten oder nutze „Block hinzufügen“. Dauer und Wochentag lassen sich direkt im Kalender anpassen.</small></div>
-          <div class="guide-step"><strong>2. Klassen konfigurieren</strong><small>Ordne Blöcke einer Klasse zu und lege Teilaufgaben samt benötigten Lerneinheiten fest.</small></div>
+          <div class="guide-step"><strong>2. Klassen konfigurieren</strong><small>Verknüpfe Vorlesungen nach Fach oder einzeln mit einer Klasse. Lege die Standarddauer für Blöcke sowie optionale Dauern je Teilaufgabe fest.</small></div>
           <div class="guide-step"><strong>3. Fortschritt festhalten</strong><small>Erledigte Einheiten schalten die nächste Teilaufgabe frei. Bei „Nicht geschafft“ rückt der Klassenplan um einen Termin weiter.</small></div>
         </div>
         <div id="lp-week-view">
@@ -148,11 +148,15 @@
     <label>Name der Klasse</label><input id="class-name" maxlength="100" placeholder="z. B. Biologie-Grundlagen">
     <label>Beschreibung</label><textarea id="class-description" rows="2" placeholder="Wiederkehrende Lernreihe beschreiben (optional)"></textarea>
     <label>Farbe</label><input type="color" id="class-color" class="lp-color-input" value="#f3d8cb">
+    <label>Standarddauer pro Lernblock (Minuten)</label><input id="class-duration" type="number" min="30" max="720" step="30" value="60">
+    <label>Vorlesungen</label>
+    <div id="class-lecture-selector" class="lp-lecture-selector"></div>
+    <div id="class-linked-lecture-tasks" class="lp-linked-lecture-tasks"></div>
     <label class="checkbox-label" style="margin-top:16px;"><input type="checkbox" id="class-loop"> Zyklus wiederholen, wenn alle Teilaufgaben durchlaufen sind</label>
     <div class="flex items-center justify-between" style="margin-top:20px;margin-bottom:8px;">
       <strong>Teilaufgaben</strong><button class="btn small" onclick="addClassTaskRow()">＋ Teilaufgabe</button>
     </div>
-    <p class="text-muted" style="font-size:12px;margin-bottom:10px;">Die Reihenfolge in dieser Liste bestimmt, welche Teilaufgabe zuerst in deinen Lernblöcken erscheint.</p>
+    <p class="text-muted" style="font-size:12px;margin-bottom:10px;">Ausgewählte Vorlesungen desselben Fachs bilden eine Teilaufgabe mit je einer Einheit pro Vorlesung und werden vor den manuellen Teilaufgaben abgearbeitet. Die Reihenfolge der manuellen Teilaufgaben bestimmt deren Reihenfolge. Eine eigene Dauer überschreibt die Standarddauer dieser Klasse.</p>
     <div id="class-task-editor"></div>
     <div class="modal-actions"><button class="btn danger" id="class-delete-btn" onclick="deleteCurrentClass()">Klasse löschen</button><button class="btn" onclick="closeClassModal()">Abbrechen</button><button class="btn primary" onclick="saveClass()">Speichern</button></div>
   </div>
