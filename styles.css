@@ -38,6 +38,7 @@
   .date-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:var(--surface-hover);border-radius:999px;font-size:13px;color:var(--ink-secondary);font-family:'JetBrains Mono',monospace;border:1px solid var(--border-light)}
   .topbar-actions{display:flex;gap:10px;align-items:center}
   .content{padding:28px 32px 48px;flex:1;max-width:1200px}
+  .section-data-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-bottom:16px}
   .btn{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--ink-secondary);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:var(--transition);white-space:nowrap}
   .btn:hover{border-color:var(--ink-tertiary);color:var(--ink);transform:translateY(-1px);box-shadow:var(--shadow)}
   .btn:active{transform:translateY(0)}

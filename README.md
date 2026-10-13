@@ -52,7 +52,7 @@ The first tab gives a quick overview of pending lectures and open to-dos across 
 
 ### Export & Import
 
-Your data can be exported as a `.json` file at any time via the **Export** button in the top bar. The same file can be re-imported on any device or browser using the **Import** button. Import fully replaces the current data, so export first if you want a backup.
+Your data can be exported as a `.json` file at any time via the **Export** button in the sidebar. The same file can be re-imported on any device or browser using the **Import** button. A full import replaces all current data, so export first if you want a backup. The sections for lectures, schedule, learning plan, notes, and to-dos also have their own **Bereich exportieren** and **Bereich importieren** actions. A section import replaces only that section and leaves all other data unchanged.
 
 ---
 

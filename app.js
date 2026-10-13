@@ -21,6 +21,13 @@ const TYPE_LABELS = { rechtsgebiet: 'Thema nacharbeiten', klausur: 'Klausur schr
 const WEEKDAY_NAMES = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 const SECTION_TITLES = { dashboard:'Übersicht', lectures:'Vorlesungen', schedule:'Stundenplan', lernplan:'Lernplan', notes:'Notizen', todos:'Aufgaben' };
 const SECTION_ACTIONS = { dashboard:null, lectures:'openLecModal', schedule:'openScheduleModal', lernplan:'toggleBlockCreation', notes:'newNote', todos:'addTodo' };
+const SECTION_DATA_KEYS = {
+  lectures:['lectures'],
+  schedule:['schedule'],
+  lernplan:['subjectQueue','weekPlanSlots','weekPlanDays','weekPlanAnchor','weekPlanClasses'],
+  notes:['notes'],
+  todos:['todos']
+};
 
 function saveToLocal() { localStorage.setItem('studydesk_pro', JSON.stringify(data)); updateDash(); }
 function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
@@ -41,6 +48,7 @@ function initializeCurrentPage() {
     btn.textContent = labels[SECTION_ACTIONS[section]];
   } else { btn.style.display = 'none'; }
 
+  initializeSectionDataActions(section);
   updateDate();
   if (section === 'dashboard') updateDash();
   if (section === 'lectures') renderLectures();
@@ -53,6 +61,79 @@ function updateDate() { document.getElementById('date-display').textContent = ne
 function triggerTopAction() { const fn = SECTION_ACTIONS[document.body.dataset.section]; if(fn) new Function(fn+'()')(); }
 
 // ── Export / Import ──
+function initializeSectionDataActions(section) {
+  const keys = SECTION_DATA_KEYS[section];
+  const content = document.querySelector('.content');
+  if (!keys || !content || content.querySelector('.section-data-actions')) return;
+
+  const actions = document.createElement('div');
+  actions.className = 'section-data-actions';
+  const exportButton = document.createElement('button');
+  exportButton.className = 'btn';
+  exportButton.textContent = '⬇ Bereich exportieren';
+  exportButton.onclick = () => exportSectionData(section);
+  const importButton = document.createElement('button');
+  importButton.className = 'btn';
+  importButton.textContent = '⬆ Bereich importieren';
+  importButton.onclick = () => document.getElementById('section-import-file-input').click();
+  actions.append(exportButton,importButton);
+  content.prepend(actions);
+
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.id = 'section-import-file-input';
+  fileInput.accept = '.json,application/json';
+  fileInput.hidden = true;
+  fileInput.addEventListener('change', () => handleSectionImportFile(fileInput,section));
+  document.body.appendChild(fileInput);
+}
+function exportSectionData(section) {
+  const keys = SECTION_DATA_KEYS[section];
+  if (!keys) return;
+  const sectionData = Object.fromEntries(keys.map(key => [key,data[key]]));
+  const blob = new Blob([JSON.stringify(sectionData,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `studydesk_${section}_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast(`${SECTION_TITLES[section]} exportiert ✓`);
+}
+function handleSectionImportFile(input,section) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onerror = () => toast('Datei konnte nicht gelesen werden.');
+  reader.onload = () => {
+    let parsed;
+    try {
+      parsed = JSON.parse(reader.result);
+    } catch {
+      toast('Fehler: Ungültige JSON-Datei');
+      return;
+    }
+    const keys = SECTION_DATA_KEYS[section];
+    const valid = keys && parsed && typeof parsed === 'object' && !Array.isArray(parsed) &&
+      keys.every(key => Object.prototype.hasOwnProperty.call(parsed,key)) &&
+      keys.every(key => key === 'weekPlanDays'
+        ? parsed[key] && typeof parsed[key] === 'object' && !Array.isArray(parsed[key])
+        : key === 'weekPlanAnchor'
+          ? parsed[key] === null || typeof parsed[key] === 'string'
+          : Array.isArray(parsed[key]));
+    if (!valid) {
+      toast(`Die Datei enthält keine gültigen ${SECTION_TITLES[section]}-Daten.`);
+      return;
+    }
+    if (!confirm(`${SECTION_TITLES[section]} importieren? Die vorhandenen Daten in diesem Bereich werden ersetzt. Alle anderen Bereiche bleiben unverändert.`)) return;
+    keys.forEach(key => { data[key] = parsed[key]; });
+    saveToLocal();
+    initializeCurrentPage();
+    toast(`${SECTION_TITLES[section]} importiert ✓`);
+  };
+  reader.readAsText(file);
+}
 function exportData() {
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -1481,6 +1562,8 @@ function completeOccurrence(dateStr,blockId) {
     if (Array.isArray(task.lectureIds)) {
       if (!Array.isArray(task.completedLectureIds)) task.completedLectureIds = [];
       if (occurrence.assignedLectureId && !task.completedLectureIds.includes(occurrence.assignedLectureId)) task.completedLectureIds.push(occurrence.assignedLectureId);
+      const lecture = data.lectures.find(item => String(item.id) === String(occurrence.assignedLectureId));
+      if (lecture && !lecture.cancelled) lecture.done = true;
       task.completedUnits = task.completedLectureIds.length;
     } else task.completedUnits++;
     if (cls.loop) lpResetClassLoop(cls);
